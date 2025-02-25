@@ -67,4 +67,3 @@ const public_leafIndex = public_leaves.indexOf(public_leafToProve);
 console.log({ public_leafIndex });
 const public_proof = getMerkleProof(public_leaves, public_leafIndex);
 console.log({ public_proof });
-

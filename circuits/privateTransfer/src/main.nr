@@ -53,8 +53,6 @@ fn main(
 ) {
     // verify new nullifier key
     let computed_nullifier_key = poseidon::bn254::hash_2([prev_nonce + 1, secret]);
-    println(computed_nullifier_key);
-    println(nullifier_key);
     assert(
         computed_nullifier_key == nullifier_key,
         "nullifier key computed in circuit doesn't match nullifier key passed in as parameter",
@@ -129,12 +127,12 @@ fn test_main_simple_merkle() {
     // ----- private inputs -----
 
     let sender_account = 0x000000000000000000000000000000000000000000000000476f207465616d21;
-    let secret = 0x0000000000000000000000000000000000000000000000000000000000000001;
+    let secret = 0x01;
 
     // ----- public inputs -----
     let transfer_amount = 0x0000000000000000000000000000000000000000000000000000000000000005;
     let nullifier_value = 0x181aa2c05a6aeee42fbca413814be97aa8fd7bfea28054608f637ce56db49eeb;
-    let nullifier_key = 0x06bc82c28f3768bb8ed8341732a72a2599d155354ec02fe60c5dce4b67ddfb1d;
+    let nullifier_key = 0x007af346e2d304279e79e0a9f3023f771294a78acb70e73f90afe27cad401e81;
     let prev_shadow_balance_root =
         0x0da0074206e594435cf1e040dae0c583f637558e4e3b57576ded0777f8004dd1;
     let recipient_account = 0x123;
