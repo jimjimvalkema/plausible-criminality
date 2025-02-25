@@ -35,7 +35,7 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
         return  PoseidonT3.hash(preimg);
     }
 
-    function _updatePublicBalanceTree(address _address, uint256 _newBalance) private {
+    function _updateIncomingBalanceTree(address _address, uint256 _newBalance) private {
         uint32 addressIndex = merkleIndexOfAccount[_address];
         uint256 leaf =  hashPublicBalanceLeaf(_address, _newBalance);
         if (addressIndex == 0) { // 0= not in here yet
@@ -69,7 +69,8 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
                 // Overflow not possible: value <= fromBalance <= totalSupply.
                 uint256 newBalance = fromBalance - value;
                 _balances[from] = newBalance;
-                _updatePublicBalanceTree(from, newBalance);
+                // only incomming so we dont update from (its outgoing for out "from" guy)
+                //_updateIncommingBalanceTree(from, newBalance);
             }
         }
 
@@ -81,10 +82,9 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
         } else {
             unchecked {
                 // Overflow not possible: balance + value is at most totalSupply, which we know fits into a uint256.
-                
                 uint256 newBalance = _balances[to] + value;
                 _balances[to] = newBalance;
-                _updatePublicBalanceTree(from, newBalance);
+                _updateIncomingBalanceTree(to, newBalance);
             }
         }
 

@@ -20,6 +20,7 @@ import {MerkleStateBase} from "./MerkleStateBase.sol";
 //shadowCurrentRootIndex
 //shadowNextIndex
 abstract contract ShadowBalanceTree is MerkleStateBase {
+  event ShadowNewLeaf(uint256 indexed leaf, uint32 leafIndex, uint256 timestamp);
   // constructor(uint32 _levels) {
   //   for (uint32 i = 0; i < levels; i++) {
   //     shadowFilledSubtrees[i] = zeros(i);
@@ -75,6 +76,7 @@ abstract contract ShadowBalanceTree is MerkleStateBase {
     shadowCurrentRootIndex = newRootIndex;
     shadowRoots[newRootIndex] = currentLevelHash;
     shadowNextIndex = _nextIndex + 1;
+    emit ShadowNewLeaf(_leaf, _nextIndex, block.timestamp);
     return _nextIndex;
   }
 

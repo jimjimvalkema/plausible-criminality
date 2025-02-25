@@ -21,6 +21,8 @@ import {MerkleStateBase} from "./MerkleStateBase.sol";
 //incomBalcurrentRootIndex
 //incomBalNextIndex
 abstract contract IncomingBalanceTree is MerkleStateBase {
+  event IncomBalNewLeaf(uint256 indexed leaf, uint32 leafIndex, uint256 timestamp);
+  event IncomBalUpdatedLeaf(uint256 indexed leaf, uint32 leafIndex, uint256 timestamp);
   // constructor(uint32 _levels) MerkleStateBase(_levels) {
   //   for (uint32 i = 0; i < levels; i++) {
   //     incomBalAllFilledSubtrees[i][0] = zeros(i);
@@ -65,6 +67,8 @@ abstract contract IncomingBalanceTree is MerkleStateBase {
     incomBalCurrentRootIndex = newRootIndex;
     incomBalRoots[newRootIndex] = currentLevelHash;
     incomBalNextIndex = _nextIndex + 1;
+
+    emit IncomBalNewLeaf(_leaf, _nextIndex, block.timestamp);
     return _nextIndex;
   }
 
@@ -91,6 +95,8 @@ abstract contract IncomingBalanceTree is MerkleStateBase {
     uint32 newRootIndex = (incomBalCurrentRootIndex + 1) % ROOT_HISTORY_SIZE;
     incomBalCurrentRootIndex = newRootIndex;
     incomBalRoots[newRootIndex] = currentLevelHash;
+
+    emit IncomBalUpdatedLeaf(_leaf, _index, block.timestamp);
   }
 
 
