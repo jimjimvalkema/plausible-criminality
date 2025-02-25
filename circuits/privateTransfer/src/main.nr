@@ -24,7 +24,7 @@ fn main(
     nullifier_value: pub Field,
     // Poseidon(prev_nonce + 1, Secret)
     nullifier_key: pub Field,
-    shadow_balance_root: pub Field,
+    prev_shadow_balance_root: pub Field,
     public_balance_root: pub Field,
     // we need this in the proof otherwise someone can steal it an change the account
     // TODO: should strip this down to 20 bytes to be ethereum compatible
@@ -33,9 +33,8 @@ fn main(
     // information that could be used to id sender
     // hashes needed to re-construct the merkle root for both trees
     // if this was public somone would be able to link youre previous txns together
-    // TODO: should it be 30, 31, or 32?
-    prev_shadow_balance_merkle_proof: [Field; 31],
-    prev_public_balance_merkle_proof: [Field; 31],
+    prev_shadow_balance_merkle_proof: [Field; 32],
+    public_balance_merkle_proof: [Field; 32],
     // poseidon(Secret)
     sender_account: Field,
     // private key
@@ -48,10 +47,10 @@ fn main(
     prev_shadow_balance: Field,
     // position of the account from the array that holds the merkle roots
     // just for merkle proof
-    shadow_balance_index: Field,
+    prev_shadow_balance_index: Field,
     public_balance_index: Field,
 ) {
-    // verify nullifier value
+    // verify new nullifier value
     let computed_nullifier_value = poseidon::bn254::hash_3([
         prev_shadow_balance + transfer_amount,
         prev_nonce + 1,
@@ -62,22 +61,27 @@ fn main(
         "nullifier value computed in circuit doesn't match nullifier value passed in as parameter",
     );
 
-    // verify nullifier key
+    // verify new nullifier key
     let computed_nullifier_key = poseidon::bn254::hash_2([prev_nonce + 1, secret]);
     assert(
         computed_nullifier_key == nullifier_key,
         "nullifier key computed in circuit doesn't match nullifier key passed in as parameter",
     );
 
-    // verify shadow balance tree root
-    let shadow_balance_leaf = poseidon::bn254::hash_2([nullifier_key, nullifier_value]);
-    let computed_shadow_balance_root = compute_merkle_root(
-        shadow_balance_leaf,
-        shadow_balance_index,
+    // compute previous nullifier key & value
+    let prev_nullifier_key = poseidon::bn254::hash_2([prev_nonce, secret]);
+    let prev_nullifier_value = poseidon::bn254::hash_3([prev_shadow_balance, prev_nonce, secret]);
+
+    // verify previous shadow balance tree root
+    let prev_shadow_balance_leaf =
+        poseidon::bn254::hash_2([prev_nullifier_key, prev_nullifier_value]);
+    let computed_prev_shadow_balance_root = compute_merkle_root(
+        prev_shadow_balance_leaf,
+        prev_shadow_balance_index,
         prev_shadow_balance_merkle_proof,
     );
     assert(
-        computed_shadow_balance_root == shadow_balance_root,
+        computed_prev_shadow_balance_root == prev_shadow_balance_root,
         "computed shadow balance tree root doesn't match shadow balance tree root passed in as parameter",
     );
 
@@ -86,7 +90,7 @@ fn main(
     let computed_public_balance_root = compute_merkle_root(
         public_balance_leaf,
         public_balance_index,
-        prev_public_balance_merkle_proof,
+        public_balance_merkle_proof,
     );
     assert(
         computed_public_balance_root == public_balance_root,
@@ -99,6 +103,48 @@ fn main(
     assert(lower_then_or_equal(transfer_amount, spendable_balance), "not enough funds to transfer");
 }
 
+#[test]
+fn test_main() {
+    /* Scenario: account A privately sends 5 tokens
+
+    before:
+        account A:
+            public_bal: 10 private_bal: 0
+            nonce: 0
+    after:
+        account A:
+            public_bal: 10
+            private_bal: 5
+            nonce: 1
+    */
+
+    // setup vars
+    let secret = 0x1;
+
+    // ----- public inputs -----
+    let transfer_amount = 5;
+    let nullifier_value = poseidon::bn254::hash_3([5, 1, secret]);
+    let nullifier_key = poseidon::bn254::hash_2([1, secret]);
+    // let shadow_balance_root = TODO: first, verify our merkle function works
+
+    let nullifier_value = main(
+        transfer_amount,
+        nullifier_value,
+        nullifier_key,
+        shadow_balance_root,
+        public_balance_root,
+        recipient_account,
+        prev_shadow_balance_merkle_proof,
+        prev_shadow_balance_merkle_proof,
+        sender_account,
+        secret,
+        public_balance,
+        prev_nonce,
+        prev_shadow_balance,
+        shadow_balance_index,
+        public_balance_index,
+    );
+}
 /*
 #[test]
 fn test_hashing() {

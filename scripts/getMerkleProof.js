@@ -16,13 +16,14 @@ const HASH_FUNCTION = (left, right) => ethers.toBeHex(poseidon2([BigInt(left), B
  */
 function getMerkleProof(nonEmptyLeaves, leafIndex) {
     const tree = new MerkleTree(MERKLETREEDEPTH, nonEmptyLeaves, { hashFunction: HASH_FUNCTION, zeroElement: ZERO })
-    const proofPath = tree.path(leafIndex) 
-    return {proof: proofPath.pathElements, leafIndex, root:proofPath.pathRoot}
+    const proofPath = tree.path(leafIndex)
+    return { proof: proofPath.pathElements, leafIndex, root: proofPath.pathRoot }
 }
 
-const leafToProof = ethers.zeroPadValue(ethers.hexlify(new TextEncoder().encode("hiJoss")),32)
-const leaves = [leafToProof,"0x0000000000000000000000000000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000000000000000000000000000003", "0x0000000000000000000000000000000000000000000000000000000000000004"].map((i)=>ethers.zeroPadValue(i,32))
+const leafToProof = ethers.zeroPadValue(ethers.hexlify(new TextEncoder().encode("hiJoss")), 32)
+console.log({ leafToProof })
+const leaves = [leafToProof, "0x0000000000000000000000000000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000000000000000000000000000003", "0x0000000000000000000000000000000000000000000000000000000000000004"].map((i) => ethers.zeroPadValue(i, 32))
 const leafIndex = leaves.indexOf(leafToProof)
 const proof = getMerkleProof(leaves, leafIndex)
 
-console.log({proof})
+console.log({ proof })
