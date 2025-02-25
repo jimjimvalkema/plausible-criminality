@@ -1,0 +1,7 @@
+[package]
+name = "privateTransfer"
+type = "bin"
+authors = [""]
+
+[dependencies]
+merkle = { path = "../../merkle" }
