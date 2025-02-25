@@ -52,7 +52,33 @@ fn get_burn_address(secret: Field) -> [u8; 32] {
 // TODO:
 // remove everything with storage proof and change to merkle proof
 // private spend tree leaf hashing pos_hash
-// pub accont tree leaf
+// pub accont tree leaf:
+
+// exection flow
+// have 2 circuits, private and public transfer
+// both mains take the root nodes of both pub and private account trees
+// also take the leaf of the user
+// rebuild account tree using user's leaf
+// require(rebuilt_root == passed in root)
+// thats it
+
+// nullifier_key is poseidon(nonce, secret)
+// nullifier_value is poseidon(private_balance, nonce, secret_key)
+// can check has_nullifier_value and hash_nullifier_key
+fn hash_private_spend_tree_leaf(nullifier_key: Field, nullifier_value: Field) -> Field {
+    poseidon::bn254::hash_2([nullifier_key, nullifier_value])
+}
+
+// hash secret key for public account tree
+fn hash_secret_key(secret_key: Field) -> Field {
+    poseidon::bn254::hash_1([secret_key])
+}
+
+// account is a hash of their secret key
+// balance is public balance
+fn hash_public_spend_tree_leaf(account: Field, balance: Field) -> Field {
+    poseidon::bn254::hash_2([account, balance])
+}
 
 // nonce makes sure the hash is never the same even when the amount is different
 // secret is so others cant try and find the pre-image (since this hash is posted onchain)
@@ -77,7 +103,9 @@ fn main(
     withdraw_amount: pub Field,
     nullifier_value: pub Field,
     nullifier_key: pub Field,
-    storage_root: pub Field,
+    pub_account_tree_root: pub Field,
+    priv_account_tree_root: pub Field,
+    // storage_root: pub Field,
     //-----very privacy sensitive data -----
     secret: Field, //burnaddress is derived from secret // TODO instead of using a secrets use public cryptography shit so hardware wallets dont have to create a whole ass proof. Also makes complexity lower for hot wallets to ensure safety and better compatability with metamasksnap.
     burned_balance: [u8; 32], //TODO split into fields constraint golf or just as a field (also gas golf) (assumes a balance never > FIELD_LIMIT)
