@@ -1,0 +1,15 @@
+nullifier_key = ""
+nullifier_value = ""
+prev_nonce = ""
+prev_public_balance_merkle_proof = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+prev_shadow_balance = ""
+prev_shadow_balance_merkle_proof = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+public_balance = ""
+public_balance_index = ""
+public_balance_root = ""
+recipient_account = ""
+secret = ""
+sender_account = ""
+shadow_balance_index = ""
+shadow_balance_root = ""
+transfer_amount = ""

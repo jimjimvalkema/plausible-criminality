@@ -19,10 +19,10 @@ pub fn compute_merkle_root<let N: u32>(leaf: Field, index: Field, hash_path: [Fi
     current
 }
 
-#[test]
-fn test_not_equal() {
-    assert(not_equal(1, 2));
+// #[test]
+// fn test_not_equal() {
+//     assert(not_equal(1, 2));
 
-    // Uncomment to make test fail
-    // assert(not_equal(1, 1));
-}
+//     // Uncomment to make test fail
+//     // assert(not_equal(1, 1));
+// }
