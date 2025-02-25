@@ -27,11 +27,13 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
  * applications.
  */
 abstract contract ERC20 is Context, IERC20, IERC20Metadata, IERC20Errors {
-    mapping(address account => uint256) private _balances;
+    //mapping(address account => uint256) private _balances;
+    mapping(address account => uint256) internal _balances; //needs to be accesible so we can directly update it on private transfer without creating a mint event
 
     mapping(address account => mapping(address spender => uint256)) private _allowances;
 
-    uint256 private _totalSupply;
+    //uint256 private _totalSupply;
+    uint256 internal _totalSupply; // needs to be accesible to be able to modify _update to update the publicBalanceTree
 
     string private _name;
     string private _symbol;
