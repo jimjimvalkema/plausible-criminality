@@ -7,6 +7,7 @@
  *    88    88.  .88 88       88    88 88.  .88 88.  .88 88.  .88 dP Y8.   .88 88.  .88       88 88    88
  *    dP    `88888P' dP       dP    dP `88888P8 `88888P8 `88888P' 88  Y88888P' `88888P8 `88888P' dP    dP
  * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ * and a little bit of ultraAnon :D
  */
 
 // SPDX-License-Identifier: MIT
@@ -14,12 +15,11 @@ pragma solidity 0.8.28;
 
 import "poseidon-solidity/PoseidonT3.sol";
 
-contract MerkleTreeWithHistory {
+contract UpdatableMerkleTreeWithHistory {
   uint256 public constant FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
   //js BigInt(ethers.keccak256(new TextEncoder().encode("tornado"))) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n
   uint256 public constant ZERO_VALUE = 21663839004416932945382355908790599225266501822907911457504978515578255421292; // = keccak256("tornado") % FIELD_SIZE j
-
   uint32 public levels;
 
   // the following variables are made public for easier testing and debugging and
@@ -27,7 +27,8 @@ contract MerkleTreeWithHistory {
 
   // filledSubtrees and roots could be bytes32[size], but using mappings makes it cheaper because
   // it removes index range check on every interaction
-  mapping(uint256 => uint256) public filledSubtrees;
+  //mapping(uint256 => uint256) public filledSubtrees; //TODO can the replaced by just allFilledSubtrees
+  mapping(uint256 => mapping(uint256=> uint256)) public allFilledSubtrees; // TODO should be a flat arrray somehow
   mapping(uint256 => uint256) public roots;
   uint32 public constant ROOT_HISTORY_SIZE = 30;
   uint32 public currentRootIndex = 0;
@@ -39,7 +40,7 @@ contract MerkleTreeWithHistory {
     levels = _levels;
 
     for (uint32 i = 0; i < _levels; i++) {
-      filledSubtrees[i] = zeros(i);
+      allFilledSubtrees[i][0] = zeros(i);
     }
 
     roots[0] = zeros(_levels);
@@ -68,12 +69,12 @@ contract MerkleTreeWithHistory {
     uint256 right;
 
     for (uint32 i = 0; i < levels; i++) {
+      allFilledSubtrees[i][currentIndex] = currentLevelHash;
       if (currentIndex % 2 == 0) {
         left = currentLevelHash;
         right = zeros(i);
-        filledSubtrees[i] = currentLevelHash;
       } else {
-        left = filledSubtrees[i];
+        left = allFilledSubtrees[i][currentIndex-1];
         right = currentLevelHash;
       }
       currentLevelHash = hashLeftRight(left, right);
@@ -86,6 +87,32 @@ contract MerkleTreeWithHistory {
     nextIndex = _nextIndex + 1;
     return _nextIndex;
   }
+
+  function _update(uint256 _leaf, uint32 _index) internal {
+    require(_index < nextIndex, "can only update existing values");
+    uint32 currentIndex = _index;
+    uint256 currentLevelHash = _leaf;
+    uint256 left;
+    uint256 right;
+
+    for (uint32 i = 0; i < levels; i++) {
+      allFilledSubtrees[i][currentIndex] = currentLevelHash;
+      if (currentIndex % 2 == 0) {
+        left = currentLevelHash;
+        right = allFilledSubtrees[i][currentIndex+1];
+      } else {
+        left = allFilledSubtrees[i][currentIndex-1];
+        right = currentLevelHash;
+      }
+      currentLevelHash = hashLeftRight(left, right);
+      currentIndex /= 2;
+    }
+
+    uint32 newRootIndex = (currentRootIndex + 1) % ROOT_HISTORY_SIZE;
+    currentRootIndex = newRootIndex;
+    roots[newRootIndex] = currentLevelHash;
+  }
+
 
   /**
     @dev Whether the root is present in the root history
