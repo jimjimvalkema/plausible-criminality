@@ -58,17 +58,12 @@ fn main(
         "nullifier key computed in circuit doesn't match nullifier key passed in as parameter",
     );
 
-    println(prev_shadow_balance);
-    println(transfer_amount);
-    println(secret);
     // verify new nullifier value
     let computed_nullifier_value = poseidon::bn254::hash_3([
         prev_shadow_balance + transfer_amount,
         prev_nonce + 1,
         secret,
     ]);
-    println(computed_nullifier_value);
-    println(nullifier_value);
     assert(
         computed_nullifier_value == nullifier_value,
         "nullifier value computed in circuit doesn't match nullifier value passed in as parameter",
@@ -131,7 +126,7 @@ fn test_main_simple_merkle() {
 
     // ----- public inputs -----
     let transfer_amount = 0x0000000000000000000000000000000000000000000000000000000000000005;
-    let nullifier_value = 0x181aa2c05a6aeee42fbca413814be97aa8fd7bfea28054608f637ce56db49eeb;
+    let nullifier_value = 0x0a336d135f550efc5be349d371ce31288858a0ddd2ad3442bb19d33d5e24f7e4;
     let nullifier_key = 0x007af346e2d304279e79e0a9f3023f771294a78acb70e73f90afe27cad401e81;
     let prev_shadow_balance_root =
         0x0da0074206e594435cf1e040dae0c583f637558e4e3b57576ded0777f8004dd1;
@@ -207,7 +202,7 @@ fn test_main_simple_merkle() {
     ];
     let public_balance = 0x000000000000000000000000000000000000000000000000000000000000000a;
     let prev_nonce = 0x00;
-    let prev_shadow_balance = 0x000000000000000000000000000000000000000000000000000000000000000a;
+    let prev_shadow_balance = 0x0000000000000000000000000000000000000000000000000000000000000000;
     let prev_shadow_balance_index = 0;
     let public_balance_index = 0;
 

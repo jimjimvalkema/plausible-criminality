@@ -27,8 +27,7 @@ function getMerkleProof(nonEmptyLeaves, leafIndex) {
 const secret = 0x01;
 const prev_nonce = 0x00;
 console.log({ prev_nonce });
-const prev_priv_balance = 0x0a;
-console.log({ prev_priv_balance });
+const prev_priv_balance = 0x00;
 const prev_nullifier_key = HASH_FUNCTION(prev_nonce, secret);
 const prev_nullifier_value = ethers.zeroPadValue(ethers.toBeHex(poseidon3([BigInt(prev_priv_balance), BigInt(prev_nonce), BigInt(secret)])), 32);
 const prev_leafToProve = HASH_FUNCTION(prev_nullifier_key, prev_nullifier_value);
@@ -67,3 +66,4 @@ const public_leafIndex = public_leaves.indexOf(public_leafToProve);
 console.log({ public_leafIndex });
 const public_proof = getMerkleProof(public_leaves, public_leafIndex);
 console.log({ public_proof });
+
