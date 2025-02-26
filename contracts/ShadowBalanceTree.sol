@@ -9,47 +9,36 @@
  * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
  */
 
+// just like tornadocashes MerkleTreeWith history but some variable renamed to prevent conflicts during inheratance when using 2 trees in the contract
+// https://github.com/tornadocash/tornado-core/blob/master/contracts/MerkleTreeWithHistory.sol
+// also emits events on every insert here instead of the parent contract
+
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 import {MerkleStateBase} from "./MerkleStateBase.sol";
 
+// renamed 
+// shadow specific state
+  // shadowFilledSubtrees
+  // shadowRoots
+  // shadowCurrentRootIndex
+  // shadowNextIndex
 
-//shadowFilledSubtrees
-//shadowRoots
-//shadowCurrentRootIndex
-//shadowNextIndex
+// shadow specific write functions
+  // _shadowInsert
+
+// shadow specific read functions
+  // shadowIsKnownRoot
+  // shadowGetLastRoot
 abstract contract ShadowBalanceTree is MerkleStateBase {
   event ShadowNewLeaf(uint256 indexed leaf, uint32 leafIndex, uint256 timestamp);
-  // constructor(uint32 _levels) {
-  //   for (uint32 i = 0; i < levels; i++) {
-  //     shadowFilledSubtrees[i] = zeros(i);
-  //   }
 
-  //   shadowRoots[0] = zeros(levels);
-  // }
-  // the following variables are made public for easier testing and debugging and
-  // are not supposed to be accessed in regular code
-
-  // shadowFilledSubtrees and shadowRoots could be bytes32[size], but using mappings makes it cheaper because
-  // it removes index range check on every interaction
   mapping(uint256 => uint256) public shadowFilledSubtrees;
   mapping(uint256 => uint256) public shadowRoots;
 
   uint32 public shadowCurrentRootIndex = 0;
   uint32 public shadowNextIndex = 0;
-
-  // constructor(uint32 _levels) {
-  //   require(_levels > 0, "_levels should be greater than zero");
-  //   require(_levels < 32, "_levels should be less than 32");
-  //   levels = _levels;
-
-  //   for (uint32 i = 0; i < _levels; i++) {
-  //     shadowFilledSubtrees[i] = zeros(i);
-  //   }
-
-  //   shadowRoots[0] = zeros(_levels);
-  // }
 
   function _shadowInsert(uint256 _leaf) internal returns (uint32 index) {
     uint32 _nextIndex = shadowNextIndex;

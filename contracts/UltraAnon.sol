@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT 
 pragma solidity 0.8.28;
 
 import {ShadowBalanceTree} from "./ShadowBalanceTree.sol";
@@ -8,38 +9,58 @@ import {MerkleStateBase} from "./MerkleStateBase.sol";
 import "poseidon-solidity/PoseidonT3.sol";
 
 contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
-    // UpdatableMerkleTreeWithHistory public publicBalanceTree;
-    // MerkleTreeWithHistory public shadowBalanceTree;
-
-    mapping (address=>uint32) public merkleIndexOfAccount; // 0 = doesn't exist, realindex = merkleIndexOfAccount[_address]-1
+    mapping (address=>uint32) public merkleIndexOfAccount; // 0 == doesn't exist, realIndex = merkleIndexOfAccount[_address]-1
                                                             // this because mapping will return 0 by default even if it was never set
+      
+    //_levels = depth of the tree                                                        
     constructor(uint32 _levels) ERC20("UltraAnon", "ULTR") MerkleStateBase(_levels) {
-        
+        // initialize IncomingBalanceTree
         for (uint32 i = 0; i < levels; i++) {
             incomBalAllFilledSubtrees[i][0] = zeros(i);
         }
-
         incomBalRoots[0] = zeros(levels);
 
+        // initialize ShadowBalanceTree
         for (uint32 i = 0; i < levels; i++) {
-        shadowFilledSubtrees[i] = zeros(i);
+            shadowFilledSubtrees[i] = zeros(i);
         }
-
         shadowRoots[0] = zeros(levels);
     }
     
     function privateTransfer() public {
+        // TODO
+        // check roots
+        // check doesn't exist yet nullifierKey
 
+        // format public inputs(transferAmount, nullifierValue, nullifierKey, shadowBalanceRoot, incomingBalanceRoot, recipientAccount)
+        // verify proof
+
+        // function add nullifier 
+            // add nullifier 
+            // nullifiers[nullifierKey] = nullifierValue
+
+            // insert into shadowBalanceTree
+            // uint256 shadowBalanceLeaf = hashShadowBalanceLeaf(nullifierKey, nullifierValue);
+            // _shadowBalanceInsert(shadowBalanceLeaf)
+            
+            // track nullifierKey -> amountSpent, so user can reproduce their shadowBalance
+            // emit event nullifierKeyAdded(nullifierKey indexed, transferAmount)
+            // also track amount spend per nullifierKey so its easier to sync
     }
 
-    function hashPublicBalanceLeaf(address _address, uint256 _balance) public pure returns(uint256){
+    function hashIncomBalTreeLeaf(address _address, uint256 _balance) public pure returns(uint256){
         uint256[2] memory preimg = [uint256(uint160(_address)), _balance];
+        return  PoseidonT3.hash(preimg);
+    }
+
+    function hashShadowBalanceLeaf(uint256 nullifierKey, uint256 nullifierValue) public pure returns(uint256){
+        uint256[2] memory preimg = [nullifierKey, nullifierValue];
         return  PoseidonT3.hash(preimg);
     }
 
     function _updateIncomingBalanceTree(address _address, uint256 _newBalance) private {
         uint32 addressIndex = merkleIndexOfAccount[_address];
-        uint256 leaf =  hashPublicBalanceLeaf(_address, _newBalance);
+        uint256 leaf =  hashIncomBalTreeLeaf(_address, _newBalance);
         if (addressIndex == 0) { // 0= not in here yet
             uint32 index = _incomBalInsert(leaf);
             merkleIndexOfAccount[_address] = index+1;

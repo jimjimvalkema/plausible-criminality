@@ -10,38 +10,56 @@
  * and a little bit of ultraAnon :D
  */
 
+// inspired by tornadocashes merkle tree with history but it allows leafs to change after they're added
+// https://github.com/tornadocash/tornado-core/blob/master/contracts/MerkleTreeWithHistory.sol
+// also emits events on every insert here instead of the parent contract
+
+// renamed 
+// incomBal specific state
+  // incomBalFilledSubtrees
+  // incomBalRoots
+  // incomBalCurrentRootIndex
+  // incomBalNextIndex
+
+// incomBal specific write functions
+  // _incomBalInsert
+  // _incomBalUpdate
+
+// incomBal specific read functions
+  // incomBalIsKnownRoot
+  // incomBalGetLastRoot
+
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 import {MerkleStateBase} from "./MerkleStateBase.sol";
 
 
-//incomBalAllFilledSubtrees
-//incomBalRoots
-//incomBalcurrentRootIndex
-//incomBalNextIndex
+// shadow specific state
+  // shadowFilledSubtrees
+  // shadowRoots
+  // shadowCurrentRootIndex
+  // shadowNextIndex
+
+// shadow specific write functions
+  // _shadowInsert
+
+// shadow specific read functions
+  // shadowIsKnownRoot
+  // shadowGetLastRoot
+
+// shadow specific hashing
+  // hashPublicBalanceLeaf
 abstract contract IncomingBalanceTree is MerkleStateBase {
   event IncomBalNewLeaf(uint256 indexed leaf, uint32 leafIndex, uint256 timestamp);
   event IncomBalUpdatedLeaf(uint256 indexed leaf, uint32 leafIndex, uint256 timestamp);
-  // constructor(uint32 _levels) MerkleStateBase(_levels) {
-  //   for (uint32 i = 0; i < levels; i++) {
-  //     incomBalAllFilledSubtrees[i][0] = zeros(i);
-  //   }
 
-  //   incomBalRoots[0] = zeros(levels);
-  // }
-
-  // the following variables are made public for easier testing and debugging and
-  // are not supposed to be accessed in regular code
-
-  // filledSubtrees and roots could be bytes32[size], but using mappings makes it cheaper because
-  // it removes index range check on every interaction
-  //mapping(uint256 => uint256) public filledSubtrees; //TODO can the replaced by just allFilledSubtrees
-  mapping(uint256 => mapping(uint256=> uint256)) public incomBalAllFilledSubtrees; // TODO should be a flat arrray somehow
+  mapping(uint256 => mapping(uint256=> uint256)) public incomBalAllFilledSubtrees; // TODO should be a flat array somehow
   mapping(uint256 => uint256) public incomBalRoots;
   uint32 public incomBalCurrentRootIndex = 0;
   uint32 public incomBalNextIndex = 0;
 
+  // insert new leaf
   function _incomBalInsert(uint256 _leaf) internal returns (uint32 index) {
     uint32 _nextIndex = incomBalNextIndex;
     require(_nextIndex != uint32(2)**levels, "Merkle tree is full. No more leaves can be added");
@@ -74,6 +92,7 @@ abstract contract IncomingBalanceTree is MerkleStateBase {
     return _nextIndex;
   }
 
+  // update existing leaf
   function _incomBalUpdate(uint256 _leaf, uint32 _index) internal {
     require(_index < incomBalNextIndex, "can only update existing values");
     uint32 currentIndex = _index;
@@ -89,15 +108,15 @@ abstract contract IncomingBalanceTree is MerkleStateBase {
         if(right==0) { //double check this shit.
           right = zeros(i);
         }
-        require(right != 0, "right cant use a 0 value from incomBalAllFilledSubtrees"); //TODO this is sanity check can we remove it?
+        require(right != 0, "right cant be 0 value from incomBalAllFilledSubtrees"); //TODO this is sanity check can we remove it?
       } else {
         left = incomBalAllFilledSubtrees[i][currentIndex-1];
-        if(left==0) {
-          left = zeros(i);
-        }
+        // if(left==0) { is it safe to remove this? left should alway be filled
+        //   left = zeros(i);
+        // }
         right = currentLevelHash;
 
-        require(left != 0, "left cant use a 0 value from incomBalAllFilledSubtrees"); //TODO this is sanity check can we remove it?
+        require(left != 0, "left cant be 0 value from incomBalAllFilledSubtrees"); //TODO this is sanity check can we remove it?
       }
       currentLevelHash = hashLeftRight(left, right);
       currentIndex /= 2;

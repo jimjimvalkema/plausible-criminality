@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT 
 
 pragma solidity 0.8.28;
 import "poseidon-solidity/PoseidonT3.sol";
@@ -17,7 +18,7 @@ contract MerkleStateBase  {
     uint32 public constant ROOT_HISTORY_SIZE = 30;
 
     /**
-    @dev Hash 2 tree leaves, returns MiMC(_left, _right)
+    @dev Hash 2 tree leaves, returns poseidon(_left, _right)
     */
     function hashLeftRight(
         uint256 _left,
@@ -33,16 +34,16 @@ contract MerkleStateBase  {
 
     /// @dev provides Zero (Empty) elements for a MiMC MerkleTree. Up to 32 levels
     function zeros(uint256 i) public pure returns (uint256) {
-        if (i == 0) return uint256(0x2fe54c60d3acabf3343a35b6eba15db4821b340f76e741e2249685ed4899af6c);
-        else if (i == 1) return uint256(0x13e37f2d6cb86c78ccc1788607c2b199788c6bb0a615a21f2e7a8e88384222f8);
-        else if (i == 2) return uint256(0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765);
-        else if (i == 3) return uint256(0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee);
-        else if (i == 4) return uint256(0x27953447a6979839536badc5425ed15fadb0e292e9bc36f92f0aa5cfa5013587);
-        else if (i == 5) return uint256(0x194191edbfb91d10f6a7afd315f33095410c7801c47175c2df6dc2cce0e3affc);
-        else if (i == 6) return uint256(0x1733dece17d71190516dbaf1927936fa643dc7079fc0cc731de9d6845a47741f);
-        else if (i == 7) return uint256(0x267855a7dc75db39d81d17f95d0a7aa572bf5ae19f4db0e84221d2b2ef999219);
-        else if (i == 8) return uint256(0x1184e11836b4c36ad8238a340ecc0985eeba665327e33e9b0e3641027c27620d);
-        else if (i == 9) return uint256(0x0702ab83a135d7f55350ab1bfaa90babd8fc1d2b3e6a7215381a7b2213d6c5ce);
+              if (i == 0) return uint256(0x2fe54c60d3acabf3343a35b6eba15db4821b340f76e741e2249685ed4899af6c);
+         else if (i == 1) return uint256(0x13e37f2d6cb86c78ccc1788607c2b199788c6bb0a615a21f2e7a8e88384222f8);
+         else if (i == 2) return uint256(0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765);
+         else if (i == 3) return uint256(0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee);
+         else if (i == 4) return uint256(0x27953447a6979839536badc5425ed15fadb0e292e9bc36f92f0aa5cfa5013587);
+         else if (i == 5) return uint256(0x194191edbfb91d10f6a7afd315f33095410c7801c47175c2df6dc2cce0e3affc);
+         else if (i == 6) return uint256(0x1733dece17d71190516dbaf1927936fa643dc7079fc0cc731de9d6845a47741f);
+         else if (i == 7) return uint256(0x267855a7dc75db39d81d17f95d0a7aa572bf5ae19f4db0e84221d2b2ef999219);
+         else if (i == 8) return uint256(0x1184e11836b4c36ad8238a340ecc0985eeba665327e33e9b0e3641027c27620d);
+         else if (i == 9) return uint256(0x0702ab83a135d7f55350ab1bfaa90babd8fc1d2b3e6a7215381a7b2213d6c5ce);
         else if (i == 10) return uint256(0x2eecc0de814cfd8c57ce882babb2e30d1da56621aef7a47f3291cffeaec26ad7);
         else if (i == 11) return uint256(0x280bc02145c155d5833585b6c7b08501055157dd30ce005319621dc462d33b47);
         else if (i == 12) return uint256(0x045132221d1fa0a7f4aed8acd2cbec1e2189b7732ccb2ec272b9c60f0d5afc5b);
