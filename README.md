@@ -32,7 +32,7 @@ cp circuits/test/target/contract.sol contracts/verifier.sol
 
 deploy
 ```shell
-yarn hardhat ignition deploy ./ignition/modules/Verifier.cjs --verify  --network sepolia
+yarn hardhat ignition deploy ./ignition/modules/Verifier.cjs --verify  --network sepolia;
 ```
 
 verify etherscan
@@ -44,3 +44,6 @@ try out contract interaction
 ```shell
 yarn hardhat run test/contractinteractionTest.js 
 ```
+
+
+UltraAnon test as erc20 that has a incoming balance tree: https://sepolia.etherscan.io/address/0xAc44dD10D555F1da3F955d62F67Eec9C4d37f0a8#code
