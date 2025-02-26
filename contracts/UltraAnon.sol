@@ -8,6 +8,13 @@ import {MerkleStateBase} from "./MerkleStateBase.sol";
 
 import "poseidon-solidity/PoseidonT3.sol";
 
+interface IUltraVerifier {
+    function verify(
+        bytes calldata _proof,
+        bytes32[] calldata _publicInputs
+    ) external view returns (bool);
+}
+
 contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
     event NullifierAdded(uint256 indexed nullifierKey, uint256 amountSent);
 
@@ -56,8 +63,9 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         uint256 nullifierKey,
         uint256 shadowBalanceRoot,
         uint256 incomingBalanceRoot,
-        bytes[] calldata proof
-    ) public virtual returns (bool) {
+        address owner,
+        bytes calldata proof
+    ) external override returns (bool) {
         //check roots
         require(
             shadowIsKnownRoot(shadowBalanceRoot),
@@ -73,27 +81,36 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         emit NullifierAdded(nullifierKey, value);
         // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
 
-        address owner = _msgSender();
         _transfer(owner, to, value);
 
-        // TODO
-        // formatPublic inputs(owner, value, nullifierValue, nullifierKey, shadowBalanceRoot, incomingBalanceRoot, to)
-        // verify proof
+        require(
+            verifyPublicTransferProof(
+                value,
+                nullifierValue,
+                nullifierKey,
+                shadowBalanceRoot,
+                incomingBalanceRoot,
+                to,
+                owner,
+                proof
+            ),
+            "Was not able to verify proof. Owner might not have enough funds to transfer"
+        );
 
         return true;
     }
 
-    // TODO: make internal
-    function formatPublicInputsForPublicTransfer(
+    function verifyPublicTransferProof(
         uint256 transferAmount,
         uint256 nullifierValue,
         uint256 nullifierKey,
         uint256 previousShadowBalanceRoot,
         uint256 incomingBalanceRoot,
         address recipientAccount,
-        address senderAccount
-    ) public pure returns (bytes32[] memory publicInputs) {
-        publicInputs = new bytes32[](7);
+        address senderAccount,
+        bytes calldata proof
+    ) internal view returns (bool) {
+        bytes32[] memory publicInputs = new bytes32[](7);
 
         // Convert each input to bytes32 and add to array
         publicInputs[0] = bytes32(transferAmount);
@@ -107,7 +124,8 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         publicInputs[5] = bytes32(uint256(uint160(recipientAccount)));
         publicInputs[6] = bytes32(uint256(uint160(senderAccount)));
 
-        return publicInputs;
+        return
+            IUltraVerifier(publicTransferVerifier).verify(proof, publicInputs);
     }
 
     function privateTransfer(
@@ -117,8 +135,9 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         uint256 nullifierKey,
         uint256 shadowBalanceRoot,
         uint256 incomingBalanceRoot,
-        bytes[] calldata proof
-    ) public virtual returns (bool) {
+        address owner,
+        bytes calldata proof
+    ) external override returns (bool) {
         //check roots
         require(
             shadowIsKnownRoot(shadowBalanceRoot),
@@ -134,26 +153,34 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         emit NullifierAdded(nullifierKey, value);
         // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
 
-        address owner = _msgSender();
         _transfer(owner, to, value);
 
-        // TODO
-        // formatPublic inputs(value, nullifierValue, nullifierKey, shadowBalanceRoot, incomingBalanceRoot, to)
-        // verify proof
+        require(
+            verifyPrivateTransferProof(
+                value,
+                nullifierValue,
+                nullifierKey,
+                shadowBalanceRoot,
+                incomingBalanceRoot,
+                to,
+                proof
+            ),
+            "Was not able to verify proof. Owner might not have enough funds to transfer"
+        );
 
         return true;
     }
 
-    // TODO: make internal
-    function formatPublicInputsForPrivateTransfer(
+    function verifyPrivateTransferProof(
         uint256 transferAmount,
         uint256 nullifierValue,
         uint256 nullifierKey,
         uint256 previousShadowBalanceRoot,
         uint256 incomingBalanceRoot,
-        address recipientAccount
-    ) public pure returns (bytes32[] memory publicInputs) {
-        publicInputs = new bytes32[](6);
+        address recipientAccount,
+        bytes calldata proof
+    ) internal view returns (bool) {
+        bytes32[] memory publicInputs = new bytes32[](6);
 
         // Convert each input to bytes32 and add to array
         publicInputs[0] = bytes32(transferAmount);
@@ -166,7 +193,8 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         // by padding them with zeros on the left
         publicInputs[5] = bytes32(uint256(uint160(recipientAccount)));
 
-        return publicInputs;
+        return
+            IUltraVerifier(privateTransferVerifier).verify(proof, publicInputs);
     }
 
     function addNullifier(
