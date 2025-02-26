@@ -1,0 +1,6 @@
+[package]
+name = "merkle"
+type = "lib"
+authors = [""]
+
+[dependencies]

@@ -1,0 +1,7 @@
+[package]
+name = "publicTransfer"
+type = "bin"
+authors = [""]
+
+[dependencies]
+transfer = { path = "../transfer" }
