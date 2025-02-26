@@ -9,7 +9,7 @@
  * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
  */
 
-// just like tornadocashes MerkleTreeWith history but some variable renamed to prevent conflicts during inheratance when using 2 trees in the contract
+// just like tornadocashes MerkleTreeWith history but some variable renamed to prevent conflicts during inheritance when using 2 trees in the contract
 // https://github.com/tornadocash/tornado-core/blob/master/contracts/MerkleTreeWithHistory.sol
 // also emits events on every insert here instead of the parent contract
 

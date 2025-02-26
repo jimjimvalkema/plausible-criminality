@@ -3,8 +3,9 @@
 
 pragma solidity ^0.8.20;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IModifiedERC20} from "./interfaces/IModifiedERC20.sol";
+// TODO add IERC20Metadata back in but modify it so it uses IModifiedERC20 instead
+//import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
@@ -27,8 +28,8 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
  * applications.
  */
 
- // TODO fix interface having transferFrom
-abstract contract ModifiedERC20 is Context, IERC20, IERC20Metadata, IERC20Errors {
+ // TODO make interface ModifiedERC20
+abstract contract ModifiedERC20 is Context, IModifiedERC20, IERC20Errors {
     //mapping(address account => uint256) private _balances;
     mapping(address account => uint256) internal _balances; //needs to be accesible so we can directly update it on private transfer without creating a mint event
 
@@ -105,18 +106,18 @@ abstract contract ModifiedERC20 is Context, IERC20, IERC20Metadata, IERC20Errors
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      */
-    function transfer(address to, uint256 value) public virtual returns (bool) {
-        address owner = _msgSender();
-        _transfer(owner, to, value);
-        return true;
-    }
+    // function transfer(address to, uint256 value) public virtual returns (bool) {
+    //     address owner = _msgSender();
+    //     _transfer(owner, to, value);
+    //     return true;
+    // }
 
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual returns (uint256) {
-        return _allowances[owner][spender];
-    }
+    // function allowance(address owner, address spender) public view virtual returns (uint256) {
+    //     return _allowances[owner][spender];
+    // }
 
     /**
      * @dev See {IERC20-approve}.
@@ -128,11 +129,11 @@ abstract contract ModifiedERC20 is Context, IERC20, IERC20Metadata, IERC20Errors
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 value) public virtual returns (bool) {
-        address owner = _msgSender();
-        _approve(owner, spender, value);
-        return true;
-    }
+    // function approve(address spender, uint256 value) public virtual returns (bool) {
+    //     address owner = _msgSender();
+    //     _approve(owner, spender, value);
+    //     return true;
+    // }
 
     /**
      * @dev See {IERC20-transferFrom}.
@@ -238,6 +239,8 @@ abstract contract ModifiedERC20 is Context, IERC20, IERC20Metadata, IERC20Errors
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead
      */
+
+    // TODO might be cool to remove leaves from the in coming balance tree to so we can reuse them but idk way too complicated
     function _burn(address account, uint256 value) internal {
         if (account == address(0)) {
             revert ERC20InvalidSender(address(0));
@@ -260,9 +263,9 @@ abstract contract ModifiedERC20 is Context, IERC20, IERC20Metadata, IERC20Errors
      *
      * Overrides to this logic should be done to the variant with an additional `bool emitEvent` argument.
      */
-    function _approve(address owner, address spender, uint256 value) internal {
-        _approve(owner, spender, value, true);
-    }
+    // function _approve(address owner, address spender, uint256 value) internal {
+    //     _approve(owner, spender, value, true);
+    // }
 
     /**
      * @dev Variant of {_approve} with an optional flag to enable or disable the {Approval} event.
@@ -282,18 +285,18 @@ abstract contract ModifiedERC20 is Context, IERC20, IERC20Metadata, IERC20Errors
      *
      * Requirements are the same as {_approve}.
      */
-    function _approve(address owner, address spender, uint256 value, bool emitEvent) internal virtual {
-        if (owner == address(0)) {
-            revert ERC20InvalidApprover(address(0));
-        }
-        if (spender == address(0)) {
-            revert ERC20InvalidSpender(address(0));
-        }
-        _allowances[owner][spender] = value;
-        if (emitEvent) {
-            emit Approval(owner, spender, value);
-        }
-    }
+    // function _approve(address owner, address spender, uint256 value, bool emitEvent) internal virtual {
+    //     if (owner == address(0)) {
+    //         revert ERC20InvalidApprover(address(0));
+    //     }
+    //     if (spender == address(0)) {
+    //         revert ERC20InvalidSpender(address(0));
+    //     }
+    //     _allowances[owner][spender] = value;
+    //     if (emitEvent) {
+    //         emit Approval(owner, spender, value);
+    //     }
+    // }
 
     /**
      * @dev Updates `owner` s allowance for `spender` based on spent `value`.
@@ -303,15 +306,15 @@ abstract contract ModifiedERC20 is Context, IERC20, IERC20Metadata, IERC20Errors
      *
      * Does not emit an {Approval} event.
      */
-    function _spendAllowance(address owner, address spender, uint256 value) internal virtual {
-        uint256 currentAllowance = allowance(owner, spender);
-        if (currentAllowance < type(uint256).max) {
-            if (currentAllowance < value) {
-                revert ERC20InsufficientAllowance(spender, currentAllowance, value);
-            }
-            unchecked {
-                _approve(owner, spender, currentAllowance - value, false);
-            }
-        }
-    }
+    // function _spendAllowance(address owner, address spender, uint256 value) internal virtual {
+    //     uint256 currentAllowance = allowance(owner, spender);
+    //     if (currentAllowance < type(uint256).max) {
+    //         if (currentAllowance < value) {
+    //             revert ERC20InsufficientAllowance(spender, currentAllowance, value);
+    //         }
+    //         unchecked {
+    //             _approve(owner, spender, currentAllowance - value, false);
+    //         }
+    //     }
+    // }
 }
