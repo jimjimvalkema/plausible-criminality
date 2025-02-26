@@ -9,11 +9,19 @@ import {MerkleStateBase} from "./MerkleStateBase.sol";
 import "poseidon-solidity/PoseidonT3.sol";
 
 contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
+    event NullifierAdded(uint256 indexed nullifierKey, uint256 amountSent);
+
     mapping (address=>uint32) public merkleIndexOfAccount; // 0 == doesn't exist, realIndex = merkleIndexOfAccount[_address]-1
                                                             // this because mapping will return 0 by default even if it was never set
-      
+    
+    mapping (uint256=>uint256) public nullifiers; // nullifierKey=>nullifierValue
+
+
+    address public privateTransferVerifier;
+    address public publicTransferVerifier;
+
     //_levels = depth of the tree                                                        
-    constructor(uint32 _levels) ERC20("UltraAnon", "ULTR") MerkleStateBase(_levels) {
+    constructor(uint32 _levels, address _privateTransferVerifier, address _publicTransferVerifier) ModifiedERC20("UltraAnon", "ULTR") MerkleStateBase(_levels) {
         // initialize IncomingBalanceTree
         for (uint32 i = 0; i < levels; i++) {
             incomBalAllFilledSubtrees[i][0] = zeros(i);
@@ -25,27 +33,70 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
             shadowFilledSubtrees[i] = zeros(i);
         }
         shadowRoots[0] = zeros(levels);
-    }
-    
-    function privateTransfer() public {
-        // TODO
-        // check roots
-        // check doesn't exist yet nullifierKey
 
-        // format public inputs(transferAmount, nullifierValue, nullifierKey, shadowBalanceRoot, incomingBalanceRoot, recipientAccount)
+        privateTransferVerifier = _privateTransferVerifier;
+        publicTransferVerifier = _publicTransferVerifier;
+    }
+
+
+    /**
+     * @dev See {IERC20-transfer}.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     * - the caller must have a balance of at least `value`.
+     */
+    function publicTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot, uint256 incomingBalanceRoot, bytes[] calldata proof) public virtual returns (bool) {
+        //check roots
+        require(shadowIsKnownRoot(shadowBalanceRoot),"shadowBalance root is not known by the contract. Its either stale or invalid");
+        require(incomBalIsKnownRoot(incomingBalanceRoot),"incomingBalance root is not known by the contract. Its either stale or invalid");
+
+        addNullifier(nullifierKey, nullifierValue);
+        // track nullifierKey -> amountSpent, so user can reproduce their shadowBalance
+        emit NullifierAdded(nullifierKey, value);
+        // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
+        
+        address owner = _msgSender();
+        _transfer(owner, to, value);
+
+        // TODO
+        // formatPublic inputs(owner, value, nullifierValue, nullifierKey, shadowBalanceRoot, incomingBalanceRoot, to)
         // verify proof
 
-        // function add nullifier 
+        return true;
+    }
+    
+    function privateTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot,uint256 incomingBalanceRoot, bytes[] calldata proof) public virtual returns (bool) {
+        //check roots
+        require(shadowIsKnownRoot(shadowBalanceRoot),"shadowBalance root is not known by the contract. Its either stale or invalid");
+        require(incomBalIsKnownRoot(incomingBalanceRoot),"incomingBalance root is not known by the contract. Its either stale or invalid");
+
+        addNullifier(nullifierKey, nullifierValue);
+        // track nullifierKey -> amountSpent, so user can reproduce their shadowBalance
+        emit NullifierAdded(nullifierKey, value);
+        // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
+
+        address owner = _msgSender();
+        _transfer(owner, to, value);
+
+        // TODO
+        // formatPublic inputs(value, nullifierValue, nullifierKey, shadowBalanceRoot, incomingBalanceRoot, to)
+        // verify proof
+
+        return true;
+    }
+
+    function addNullifier(uint256 nullifierKey, uint256 nullifierValue) private {
+            // check that nullifierKey doesn't exist yet
+            require(nullifiers[nullifierKey] == 0, "nullifierKey cant be used twice");
+
             // add nullifier 
-            // nullifiers[nullifierKey] = nullifierValue
+            nullifiers[nullifierKey] = nullifierValue;
 
             // insert into shadowBalanceTree
-            // uint256 shadowBalanceLeaf = hashShadowBalanceLeaf(nullifierKey, nullifierValue);
-            // _shadowBalanceInsert(shadowBalanceLeaf)
-            
-            // track nullifierKey -> amountSpent, so user can reproduce their shadowBalance
-            // emit event nullifierKeyAdded(nullifierKey indexed, transferAmount)
-            // also track amount spend per nullifierKey so its easier to sync
+            uint256 shadowBalanceLeaf = hashShadowBalanceLeaf(nullifierKey, nullifierValue);
+            _shadowInsert(shadowBalanceLeaf);
     }
 
     function hashIncomBalTreeLeaf(address _address, uint256 _balance) public pure returns(uint256){
@@ -118,7 +169,5 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         emit Transfer(from, to, value);
     }
-
-
 }
 
