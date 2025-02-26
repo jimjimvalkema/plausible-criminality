@@ -76,6 +76,7 @@ fn main(
     // verify previous shadow balance tree root
     let prev_shadow_balance_leaf =
         poseidon::bn254::hash_2([prev_nullifier_key, prev_nullifier_value]);
+
     let computed_prev_shadow_balance_root = compute_merkle_root(
         prev_shadow_balance_leaf,
         prev_shadow_balance_index,
@@ -83,7 +84,7 @@ fn main(
     );
     assert(
         computed_prev_shadow_balance_root == prev_shadow_balance_root,
-        "computed shadow balance tree root doesn't match shadow balance tree root passed in as parameter",
+        "computed previous shadow balance tree root doesn't match previous shadow balance tree root passed in as parameter",
     );
 
     // verify public balance tree root
@@ -105,7 +106,7 @@ fn main(
 }
 
 #[test]
-fn test_main_simple_merkle() {
+fn test_main() {
     /* Scenario: account A privately sends 5 tokens
 
     before:
@@ -129,7 +130,7 @@ fn test_main_simple_merkle() {
     let nullifier_value = 0x0a336d135f550efc5be349d371ce31288858a0ddd2ad3442bb19d33d5e24f7e4;
     let nullifier_key = 0x007af346e2d304279e79e0a9f3023f771294a78acb70e73f90afe27cad401e81;
     let prev_shadow_balance_root =
-        0x0da0074206e594435cf1e040dae0c583f637558e4e3b57576ded0777f8004dd1;
+        0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f;
     let recipient_account = 0x123;
     let public_balance_root = 0x251c7a2942c4a5fb6f9270ea927fb76a57f6924283076d70804550db0b46cafe;
     let prev_shadow_balance_merkle_proof = [
