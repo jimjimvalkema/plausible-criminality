@@ -58,6 +58,8 @@ abstract contract IncomingBalanceTree is MerkleStateBase {
       } else {
         left = incomBalAllFilledSubtrees[i][currentIndex-1];
         right = currentLevelHash;
+        require(left != 0, "cant use a 0 value from incomBalAllFilledSubtrees"); //TODO this is sanity check can we remove it?
+        
       }
       currentLevelHash = hashLeftRight(left, right);
       currentIndex /= 2;
@@ -84,9 +86,18 @@ abstract contract IncomingBalanceTree is MerkleStateBase {
       if (currentIndex % 2 == 0) {
         left = currentLevelHash;
         right = incomBalAllFilledSubtrees[i][currentIndex+1];
+        if(right==0) { //double check this shit.
+          right = zeros(i);
+        }
+        require(right != 0, "right cant use a 0 value from incomBalAllFilledSubtrees"); //TODO this is sanity check can we remove it?
       } else {
         left = incomBalAllFilledSubtrees[i][currentIndex-1];
+        if(left==0) {
+          left = zeros(i);
+        }
         right = currentLevelHash;
+
+        require(left != 0, "left cant use a 0 value from incomBalAllFilledSubtrees"); //TODO this is sanity check can we remove it?
       }
       currentLevelHash = hashLeftRight(left, right);
       currentIndex /= 2;
