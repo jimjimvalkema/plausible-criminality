@@ -1,5 +1,4 @@
-use dep::merkle::compute_merkle_root;
-use dep::std::hash::poseidon;
+use dep::transfer::transfer;
 
 fn main(
     // ----- public inputs -----
@@ -14,6 +13,7 @@ fn main(
     // TODO: should strip this down to 20 bytes to be ethereum compatible
     recipient_account: pub Field,
     // poseidon(Secret)
+    // only difference between private and public transfer circuits is that this is private or public, respectively
     sender_account: pub Field,
     // ----- very privacy sensitive data -----
     // information that could be used to id sender
@@ -34,5 +34,22 @@ fn main(
     prev_shadow_balance_index: Field,
     incoming_balance_index: Field,
 ) {
-    // TODDO
+    // logic for both public and private transfer is the same, the only difference in the functions is the visibility of the
+    // `sender_account`, which is private in privateTransfer and public in publicTransfer
+    transfer(
+        transfer_amount,
+        nullifier_value,
+        nullifier_key,
+        prev_shadow_balance_root,
+        incoming_balance_root,
+        prev_shadow_balance_merkle_proof,
+        incoming_balance_merkle_proof,
+        sender_account,
+        secret,
+        incoming_balance,
+        prev_nonce,
+        prev_shadow_balance,
+        prev_shadow_balance_index,
+        incoming_balance_index,
+    )
 }

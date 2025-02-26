@@ -1,0 +1,7 @@
+[package]
+name = "transfer"
+type = "lib"
+authors = [""]
+
+[dependencies]
+merkle = { path = "../merkle" }
