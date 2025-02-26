@@ -38,9 +38,9 @@ console.log("prev shadow balance index: ", { prev_leafIndex });
 const prev_shadow_proof = getMerkleProof(prev_leaves, prev_leafIndex);
 console.log({ prev_shadow_proof });
 
-// current values (after sending 5)
+// current values (after sending 10)
 const nonce = 0x01;
-const priv_balance = 0x05;
+const priv_balance = 0x0a;
 console.log({ priv_balance });
 const nullifier_key = HASH_FUNCTION(nonce, secret);
 const nullifier_value = ethers.zeroPadValue(ethers.toBeHex(poseidon3([BigInt(priv_balance), BigInt(nonce), BigInt(secret)])), 32);
@@ -54,7 +54,7 @@ const shadow_proof = getMerkleProof(leaves, leafIndex);
 console.log({ shadow_proof });
 
 
-// public balance tree (doesn't change before & after txn)
+// incoming balance tree (doesn't change before & after txn)
 const account = ethers.zeroPadValue(ethers.hexlify(new TextEncoder().encode("Go team!")), 32)
 console.log({ account });
 const balance = ethers.zeroPadValue(ethers.toBeHex(10n), 32);
