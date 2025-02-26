@@ -28,7 +28,9 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
         shadowRoots[0] = zeros(levels);
     }
     
+    function privateTransfer() public {
 
+    }
 
     function hashPublicBalanceLeaf(address _address, uint256 _balance) public pure returns(uint256){
         uint256[2] memory preimg = [uint256(uint160(_address)), _balance];
@@ -48,7 +50,7 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
     }
 
 
-    // TODO does this overide work when its outside of the contract using this function?
+    // TODO does this override work when its outside of the contract using this function?
     /**
      * @dev Transfers a `value` amount of tokens from `from` to `to`, or alternatively mints (or burns) if `from`
      * (or `to`) is the zero address. All customizations to transfers, mints, and burns should be done by overriding
@@ -69,8 +71,8 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
                 // Overflow not possible: value <= fromBalance <= totalSupply.
                 uint256 newBalance = fromBalance - value;
                 _balances[from] = newBalance;
-                // only incomming so we dont update from (its outgoing for out "from" guy)
-                //_updateIncommingBalanceTree(from, newBalance);
+                // only incoming so we don't update from (its outgoing for out "from" guy)
+                //_updateIncomingBalanceTree(from, newBalance);
             }
         }
 
