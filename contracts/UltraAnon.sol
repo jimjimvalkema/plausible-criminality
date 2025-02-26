@@ -42,11 +42,16 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
         uint256 leaf =  hashPublicBalanceLeaf(_address, _newBalance);
         if (addressIndex == 0) { // 0= not in here yet
             uint32 index = _incomBalInsert(leaf);
-            merkleIndexOfAccount[_address] = index;
+            merkleIndexOfAccount[_address] = index+1;
         } else {
             _incomBalUpdate(leaf, addressIndex-1);
         }
 
+    }
+
+    //WARNING public mint functionl, anyone can call this!!
+    function mint(address account, uint256 value) public {
+        _mint(account,value);
     }
 
 
@@ -92,5 +97,7 @@ contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         emit Transfer(from, to, value);
     }
+
+
 }
 
