@@ -3,12 +3,12 @@ pragma solidity 0.8.28;
 
 import {ShadowBalanceTree} from "./ShadowBalanceTree.sol";
 import {IncomingBalanceTree} from "./IncomingBalanceTree.sol";
-import {ERC20} from "./ERC20.sol";
+import {ModifiedERC20} from "./ModifiedERC20.sol";
 import {MerkleStateBase} from "./MerkleStateBase.sol";
 
 import "poseidon-solidity/PoseidonT3.sol";
 
-contract UltraAnon is ERC20, ShadowBalanceTree, IncomingBalanceTree {
+contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
     mapping (address=>uint32) public merkleIndexOfAccount; // 0 == doesn't exist, realIndex = merkleIndexOfAccount[_address]-1
                                                             // this because mapping will return 0 by default even if it was never set
       

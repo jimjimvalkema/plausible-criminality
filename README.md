@@ -32,7 +32,7 @@ cp circuits/test/target/contract.sol contracts/verifier.sol
 
 deploy
 ```shell
-yarn hardhat ignition deploy ./ignition/modules/Verifier.cjs --verify  --network sepolia
+yarn hardhat ignition deploy ./ignition/modules/Verifier.cjs --verify  --network sepolia;
 ```
 
 verify etherscan

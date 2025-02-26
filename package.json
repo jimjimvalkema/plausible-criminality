@@ -26,6 +26,7 @@
     "@openzeppelin/contracts": "^5.2.0",
     "fixed-merkle-tree": "0.7.3",
     "poseidon-lite": "0.2.0",
-    "poseidon-solidity": "^0.0.5"
+    "poseidon-solidity": "^0.0.5",
+    "vite": "^6.2.0"
   }
 }
