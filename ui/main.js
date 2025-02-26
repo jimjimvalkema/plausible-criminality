@@ -1,7 +1,12 @@
 import { ethers } from "ethers";
 import UltraAnonDeploymentArtifact from "../artifacts/contracts/UltraAnon.sol/UltraAnon.json"
+import {syncInComingBalanceTree, syncShadowTree} from "../scripts/syncMaxing.js"
+window.syncInComingBalanceTree = syncInComingBalanceTree
+window.syncShadowTree = syncShadowTree
+
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
 const ultraAnonAddress = "0x46AeaE909299b8cA4a5B77De45f7Ac540a25a0F8"//UltraAnonDeploymentArtifact.
+const deploymentBlock = 7791355;
 const CHAININFO = {
     chainId: "0xaa36a7",
     rpcUrls: ["https://1rpc.io/sepolia"],
