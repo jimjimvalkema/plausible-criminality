@@ -48,12 +48,16 @@ async function deployPoseidon() {
 }
 
 async function main() {
+    const privateTransferVerifierAddress = "0x0000000000000000000000000000000000000000" // TODO deploy it here instead of hardcoding
+    const publicTransferVerifierAddress = "0x0000000000000000000000000000000000000000"// TODO deploy it here instead of hardcoding
     const PoseidonT3Address = await deployPoseidon()
     const { UltraAnon } = await hre.ignition.deploy(UltraAnonModule, {
         parameters: {
             UltraAnonModule: {
                 merkleTreeDepth,
-                PoseidonT3Address
+                PoseidonT3Address,
+                privateTransferVerifierAddress,
+                publicTransferVerifierAddress
             }
         },
     });
@@ -77,7 +81,7 @@ async function main() {
     const UltraAnonVerification =  hre.run("verify:verify", {
         address: UltraAnon.target,
         //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
-        constructorArguments: [merkleTreeDepth],
+        constructorArguments: [merkleTreeDepth,privateTransferVerifierAddress, publicTransferVerifierAddress],
         value: 0n,
         libraries: {
           PoseidonT3: PoseidonT3Address,

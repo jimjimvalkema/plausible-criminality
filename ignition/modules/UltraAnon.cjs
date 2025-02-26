@@ -7,8 +7,10 @@ module.exports = buildModule("UltraAnonModule", (m) => {
     const merkleTreeDepth =  m.getParameter("merkleTreeDepth");
     const PoseidonT3Address = m.getParameter("PoseidonT3Address");
     const _poseidonT3 = m.contractAt("PoseidonT3",PoseidonT3Address)
+    const privateTransferVerifierAddress = m.getParameter("privateTransferVerifierAddress");
+    const publicTransferVerifierAddress = m.getParameter("publicTransferVerifierAddress");
 
-    const UltraAnon = m.contract("UltraAnon", [merkleTreeDepth], {
+    const UltraAnon = m.contract("UltraAnon", [merkleTreeDepth, privateTransferVerifierAddress, publicTransferVerifierAddress ], {
         value: 0n,
         libraries: {
             PoseidonT3: _poseidonT3,

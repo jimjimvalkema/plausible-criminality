@@ -46,4 +46,4 @@ yarn hardhat run test/contractinteractionTest.js
 ```
 
 
-UltraAnon test as erc20 that has a incoming balance tree: https://sepolia.etherscan.io/address/0xAc44dD10D555F1da3F955d62F67Eec9C4d37f0a8#code
+UltraAnon test (doesn't verifying proofs): https://sepolia.etherscan.io/address/0xA38db958dcb4Dc0246BBdD6010bb69dCD005c9f5#code

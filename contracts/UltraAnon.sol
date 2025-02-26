@@ -17,8 +17,8 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
     mapping (uint256=>uint256) public nullifiers; // nullifierKey=>nullifierValue
 
 
-    address privateTransferVerifier public;
-    address publicTransferVerifier public;
+    address public privateTransferVerifier;
+    address public publicTransferVerifier;
 
     //_levels = depth of the tree                                                        
     constructor(uint32 _levels, address _privateTransferVerifier, address _publicTransferVerifier) ModifiedERC20("UltraAnon", "ULTR") MerkleStateBase(_levels) {
@@ -35,7 +35,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         shadowRoots[0] = zeros(levels);
 
         privateTransferVerifier = _privateTransferVerifier;
-        publicTransferVerifier = _publicTransferVerifier
+        publicTransferVerifier = _publicTransferVerifier;
     }
 
 
