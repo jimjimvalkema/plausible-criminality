@@ -5,6 +5,20 @@ fn lower_then_or_equal(a: Field, b: Field) -> bool {
     !std::field::bn254::gt(a, b)
 }
 
+// convert 32 byte hash to 20 bytes by chopping off the last 12
+fn convert_hash_to_evm_address(hash: Field) -> Field {
+    let hash_bytes: [u8; 32] = hash.to_be_bytes();
+
+    // initialize empty byte array
+    let mut address: [u8; 32] = [0; 32];
+    for i in 0..20 {
+        // copy bytes from the hash over to the address, leaving the first 12 bytes as 0
+        address[12 + i] = hash_bytes[i];
+    }
+
+    Field::from_be_bytes(address)
+}
+
 // extracted logic for privateTransfer and publicTransfer.
 // all variables in this function can be private because visibility only has an effect on the entrypoint functions, which are
 // the main() functions in privateTransfer and publicTransfer.
@@ -38,6 +52,14 @@ pub fn transfer(
     prev_shadow_balance_index: Field,
     incoming_balance_index: Field,
 ) {
+    // make sure the secret key is from the sender_account by hashing it
+    let hashed_secret = poseidon::bn254::hash_1([secret]);
+    let computed_sender_account = convert_hash_to_evm_address(hashed_secret);
+    assert(
+        computed_sender_account == sender_account,
+        "hash of secret doesn't match the sender_account.  Make sure the secret is from the sender account",
+    );
+
     // verify new nullifier key
     let computed_nullifier_key = poseidon::bn254::hash_2([prev_nonce + 1, secret]);
     assert(
@@ -110,14 +132,14 @@ fn test_transfer() {
             nonce: 1
     */
 
-    let sender_account = 0x000000000000000000000000000000000000000000000000476f207465616d21;
+    let sender_account = 0x29176100eaa962bdc1fe6c654d6a3c130e96a4d1;
     let secret = 0x01;
     let transfer_amount = 0x0000000000000000000000000000000000000000000000000000000000000005;
     let nullifier_value = 0x0a336d135f550efc5be349d371ce31288858a0ddd2ad3442bb19d33d5e24f7e4;
     let nullifier_key = 0x007af346e2d304279e79e0a9f3023f771294a78acb70e73f90afe27cad401e81;
     let prev_shadow_balance_root =
         0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f;
-    let incoming_balance_root = 0x251c7a2942c4a5fb6f9270ea927fb76a57f6924283076d70804550db0b46cafe;
+    let incoming_balance_root = 0x1ab32fa66d53183dcab6263a4cba066949ca88405ff498e8ebc7bba488b03070;
     let prev_shadow_balance_merkle_proof = [
         0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
@@ -215,14 +237,14 @@ fn test_transfer() {
 fn test_transfer_not_enough_funds() {
     // Scenario: account A privately sends 11 tokens but only has an incoming balance of 10
 
-    let sender_account = 0x000000000000000000000000000000000000000000000000476f207465616d21;
+    let sender_account = 0x29176100eaa962bdc1fe6c654d6a3c130e96a4d1;
     let secret = 0x01;
     let transfer_amount = 0x000000000000000000000000000000000000000000000000000000000000000b;
     let nullifier_value = 0x2878bbb29381499707dd573714ba645f437735aaf409e9449580207e67702541;
     let nullifier_key = 0x007af346e2d304279e79e0a9f3023f771294a78acb70e73f90afe27cad401e81;
     let prev_shadow_balance_root =
         0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f;
-    let incoming_balance_root = 0x251c7a2942c4a5fb6f9270ea927fb76a57f6924283076d70804550db0b46cafe;
+    let incoming_balance_root = 0x1ab32fa66d53183dcab6263a4cba066949ca88405ff498e8ebc7bba488b03070;
     let prev_shadow_balance_merkle_proof = [
         0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
@@ -319,14 +341,14 @@ fn test_transfer_not_enough_funds() {
 fn test_transfer_exactly_enough_funds() {
     // Scenario: account A privately sends 10 tokens and has an incoming balance of 10
 
-    let sender_account = 0x000000000000000000000000000000000000000000000000476f207465616d21;
+    let sender_account = 0x29176100eaa962bdc1fe6c654d6a3c130e96a4d1;
     let secret = 0x01;
     let transfer_amount = 0x000000000000000000000000000000000000000000000000000000000000000a;
     let nullifier_value = 0x210f1ec525c757ecb3460dfca11329911cf0bd48e0ac1bc83174f96fd7d5921e;
     let nullifier_key = 0x007af346e2d304279e79e0a9f3023f771294a78acb70e73f90afe27cad401e81;
     let prev_shadow_balance_root =
         0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f;
-    let incoming_balance_root = 0x251c7a2942c4a5fb6f9270ea927fb76a57f6924283076d70804550db0b46cafe;
+    let incoming_balance_root = 0x1ab32fa66d53183dcab6263a4cba066949ca88405ff498e8ebc7bba488b03070;
     let prev_shadow_balance_merkle_proof = [
         0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,

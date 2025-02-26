@@ -1,5 +1,5 @@
 import { MerkleTree } from 'fixed-merkle-tree';
-import { poseidon2, poseidon3 } from 'poseidon-lite';
+import { poseidon1, poseidon2, poseidon3 } from 'poseidon-lite';
 import { ethers } from 'ethers';
 
 const FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
@@ -55,7 +55,7 @@ console.log({ shadow_proof });
 
 
 // incoming balance tree (doesn't change before & after txn)
-const account = ethers.zeroPadValue(ethers.hexlify(new TextEncoder().encode("Go team!")), 32)
+const account = ethers.toBeHex(poseidon1([BigInt(secret)]), 32).slice(0, -24);
 console.log({ account });
 const balance = ethers.zeroPadValue(ethers.toBeHex(10n), 32);
 console.log({ balance });
