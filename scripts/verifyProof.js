@@ -11,7 +11,7 @@ const noirJsInputs = {
     nullifier_key: "0x007af346e2d304279e79e0a9f3023f771294a78acb70e73f90afe27cad401e81",
     prev_shadow_balance_root: "0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f",
     incoming_balance_root: "0x1ab32fa66d53183dcab6263a4cba066949ca88405ff498e8ebc7bba488b03070",
-    recipient_account: "0x123",
+    recipient_account: "0x44171254D698c7127820AC9Cfa06fff6fa876568",
     prev_shadow_balance_merkle_proof: [
         "0x0000000000000000000000000000000000000000000000000000000000000001",
         "0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996",

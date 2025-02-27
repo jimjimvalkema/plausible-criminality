@@ -19,7 +19,11 @@ interface IModifiedERC20 {
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 
     /**
      * @dev Returns the value of tokens in existence.
@@ -32,10 +36,28 @@ interface IModifiedERC20 {
     function balanceOf(address account) external view returns (uint256);
 
     // TODO describe this
-    function publicTransfer(address owner, address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot, uint256 incomingBalanceRoot, bytes calldata proof) external returns (bool);
+    function publicTransfer(
+        address to,
+        uint256 value,
+        uint256 nullifierValue,
+        uint256 nullifierKey,
+        uint256 shadowBalanceRoot,
+        uint256 incomingBalanceRoot,
+        address owner,
+        bytes calldata proof
+    ) external returns (bool);
 
+    function privateTransfer(
+        address to,
+        uint256 value,
+        uint256 nullifierValue,
+        uint256 nullifierKey,
+        uint256 shadowBalanceRoot,
+        uint256 incomingBalanceRoot,
+        address owner,
+        bytes calldata proof
+    ) external returns (bool);
 
-    function privateTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot,uint256 incomingBalanceRoot, bytes calldata proof) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
