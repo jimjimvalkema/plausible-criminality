@@ -1,4 +1,6 @@
 {
   "UltraAnonModule#PoseidonT3": "0x3333333C0A88F9BE4fd23ed0536F9B6c427e3B93",
-  "UltraAnonModule#UltraAnon": "0x28870cEE79a0430484BFB84A908Fb46aa686D1c5"
+  "UltraAnonModule#PrivateTransferVerifier": "0x99ad4fEE5a3bAc0C952dA6FB39Fc4a8A0a309795",
+  "UltraAnonModule#PublicTransferVerifier": "0xC9EcCf0F259bF980ff5a37ed726806beffD2c27a",
+  "UltraAnonModule#UltraAnon": "0xfF18887Aa3111f19F6582C32d667eB5cd2eC0214"
 }
