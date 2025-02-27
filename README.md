@@ -44,12 +44,6 @@ node scripts/replaceLine.js --file contracts/PrivateTransferVerifier.sol --remov
 node scripts/replaceLine.js --file contracts/PublicTransferVerifier.sol --remove "contract UltraVerifier is BaseUltraVerifier {" --replace "contract PublicTransferVerifier is BaseUltraVerifier {"
 ```
 
-copy to contracts
-```shell
-cp circuits/test/target/contract.sol contracts/verifier.sol
-```
-
-
 deploy
 ```shell
 yarn hardhat run scripts/deploy.js --network sepolia;
