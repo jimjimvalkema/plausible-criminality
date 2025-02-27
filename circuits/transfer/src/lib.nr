@@ -101,11 +101,21 @@ pub fn transfer(
 
     // verify incoming balance tree root
     let incoming_balance_leaf = poseidon::bn254::hash_2([sender_account, incoming_balance]);
+    println(f"sender_account: {sender_account}");
+    println(f"incoming_balance: {incoming_balance}");
     let computed_incoming_balance_root = compute_merkle_root(
         incoming_balance_leaf,
         incoming_balance_index,
         incoming_balance_merkle_proof,
     );
+    println(f"computed_incoming_balance_leaf: {incoming_balance_leaf}");
+    println(f"incoming_balance_index: {incoming_balance_index}");
+
+    println(f"incoming_balance_root: {incoming_balance_root}");
+    println(
+        f"computed_incoming_balance_root: {computed_incoming_balance_root}",
+    );
+
     assert(
         computed_incoming_balance_root == incoming_balance_root,
         "computed incoming balance tree root doesn't match shadow balance tree root passed in as parameter",
