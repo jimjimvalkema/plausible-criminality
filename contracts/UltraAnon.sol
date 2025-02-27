@@ -23,9 +23,6 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
     mapping(uint256 => uint256) public nullifiers; // nullifierKey=>nullifierValue
 
-    // TODO
-    // mapping(address => uint256) public incomingBalance; // Increases on receiving private and public txns
-
     address public privateTransferVerifier;
     address public publicTransferVerifier;
 
@@ -159,6 +156,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         // update the balance (cant use _transfer or _update since those need a from address )
         _balances[to] = _balances[to] + value;
         _updateIncomingBalanceTree(to, _balances[to] + value);
+        incomingBalance[to] += value;
 
         emit Transfer(address(0), to, value);
 
