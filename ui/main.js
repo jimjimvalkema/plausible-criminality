@@ -1,18 +1,20 @@
-import { ethers } from "ethers";
+import { ethers, wordlists } from "ethers";
 import UltraAnonDeploymentArtifact from "../artifacts/contracts/UltraAnon.sol/UltraAnon.json"
-import { syncInComingBalanceTree as syncIncomingBalanceTree, syncShadowTree } from "../scripts/syncMaxing.js"
+import { syncInComingBalanceTree as syncIncomingBalanceTree, syncShadowTree, syncShadowBalance } from "../scripts/syncMaxing.js"
 import { hashAddress, hashNullifierKey, hashNullifierValue } from "../scripts/hashor.js"
 import { poseidon1, poseidon2 } from "poseidon-lite";
 window.poseidon1 = poseidon1
 window.poseidon2 = poseidon2
 window.syncInComingBalanceTree = syncIncomingBalanceTree
 window.syncShadowTree = syncShadowTree
+window.syncShadowBalance = syncShadowBalance
 
 window.hashAddress = hashAddress
 
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
 const ultraAnonAddress = "0x28870cEE79a0430484BFB84A908Fb46aa686D1c5"//UltraAnonDeploymentArtifact.
 const deploymentBlock = 7793115;
+window.deploymentBlock = deploymentBlock
 const CHAININFO = {
     chainId: "0xaa36a7",
     rpcUrls: ["https://1rpc.io/sepolia"],
@@ -62,12 +64,13 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
     // @notice shadowBalanceTree, incomingBalanceTree are promises
     const shadowBalanceTree = syncShadowTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
     const incomingBalanceTree = syncIncomingBalanceTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
+    window.incomingBalanceTree= incomingBalanceTree
 
     const ultraAnonSenderAddress = hashAddress(secret)
 
     //TODO sync correct nonce and shadow balance
     const shadowBalance = 0n;
-    const shadowNonce = 1n;
+    const shadowNonce = 2n;
 
     const nullifierValue = hashNullifierValue({balance:shadowBalance, nonce:shadowNonce, secret:secret});
     const nullifierKey = hashNullifierKey({nonce:shadowNonce, secret:secret});
