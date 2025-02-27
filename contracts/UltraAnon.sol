@@ -23,6 +23,9 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
     mapping(uint256 => uint256) public nullifiers; // nullifierKey=>nullifierValue
 
+    // TODO
+    // mapping(address => uint256) public incomingBalance; // Increases on receiving private and public txns
+
     address public privateTransferVerifier;
     address public publicTransferVerifier;
 
@@ -67,7 +70,6 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         address owner,
         bytes calldata proof
     ) external override returns (bool) {
-
         //check roots
         require(
             shadowIsKnownRoot(shadowBalanceRoot),
@@ -101,7 +103,6 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         return true;
     }
-
 
     function verifyPublicTransferProof(
         uint256 transferAmount,
@@ -138,10 +139,8 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         uint256 nullifierKey,
         uint256 shadowBalanceRoot,
         uint256 incomingBalanceRoot,
-        address owner,
         bytes calldata proof
     ) external override returns (bool) {
-
         //check roots
         require(
             shadowIsKnownRoot(shadowBalanceRoot),
@@ -158,9 +157,8 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
 
         // update the balance (cant use _transfer or _update since those need a from address )
-        uint256 newRecipientBalance = _balances[to] + value;
-        _balances[to] = newRecipientBalance;
-        _updateIncomingBalanceTree(to, newRecipientBalance);
+        _balances[to] = _balances[to] + value;
+        _updateIncomingBalanceTree(to, _balances[to] + value);
 
         emit Transfer(address(0), to, value);
 
@@ -179,7 +177,6 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         return true;
     }
-
 
     function verifyPrivateTransferProof(
         uint256 transferAmount,
@@ -205,7 +202,6 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         return
             IUltraVerifier(privateTransferVerifier).verify(proof, publicInputs);
-
     }
 
     function addNullifier(

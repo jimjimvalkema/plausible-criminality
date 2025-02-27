@@ -35,8 +35,8 @@ pub fn transfer(
     // information that could be used to id sender
     // hashes needed to re-construct the merkle root for both trees
     // if this was public somone would be able to link youre previous txns together
-    prev_shadow_balance_merkle_proof: [Field; 32],
-    incoming_balance_merkle_proof: [Field; 32],
+    prev_shadow_balance_merkle_proof: [Field; 31],
+    incoming_balance_merkle_proof: [Field; 31],
     // poseidon(Secret)
     sender_account: Field,
     // private key
@@ -78,23 +78,26 @@ pub fn transfer(
         "nullifier value computed in circuit doesn't match nullifier value passed in as parameter",
     );
 
-    // compute previous nullifier key & value
-    let prev_nullifier_key = poseidon::bn254::hash_2([prev_nonce, secret]);
-    let prev_nullifier_value = poseidon::bn254::hash_3([prev_shadow_balance, prev_nonce, secret]);
+    if prev_nonce != 0 {
+        // compute previous nullifier key & value
+        let prev_nullifier_key = poseidon::bn254::hash_2([prev_nonce, secret]);
+        let prev_nullifier_value =
+            poseidon::bn254::hash_3([prev_shadow_balance, prev_nonce, secret]);
 
-    // verify previous shadow balance tree root
-    let prev_shadow_balance_leaf =
-        poseidon::bn254::hash_2([prev_nullifier_key, prev_nullifier_value]);
+        // verify previous shadow balance tree root
+        let prev_shadow_balance_leaf =
+            poseidon::bn254::hash_2([prev_nullifier_key, prev_nullifier_value]);
 
-    let computed_prev_shadow_balance_root = compute_merkle_root(
-        prev_shadow_balance_leaf,
-        prev_shadow_balance_index,
-        prev_shadow_balance_merkle_proof,
-    );
-    assert(
-        computed_prev_shadow_balance_root == prev_shadow_balance_root,
-        "computed previous shadow balance tree root doesn't match previous shadow balance tree root passed in as parameter",
-    );
+        let computed_prev_shadow_balance_root = compute_merkle_root(
+            prev_shadow_balance_leaf,
+            prev_shadow_balance_index,
+            prev_shadow_balance_merkle_proof,
+        );
+        assert(
+            computed_prev_shadow_balance_root == prev_shadow_balance_root,
+            "computed previous shadow balance tree root doesn't match previous shadow balance tree root passed in as parameter",
+        );
+    }
 
     // verify incoming balance tree root
     let incoming_balance_leaf = poseidon::bn254::hash_2([sender_account, incoming_balance]);
@@ -141,7 +144,7 @@ fn test_transfer() {
         0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f;
     let incoming_balance_root = 0x1ab32fa66d53183dcab6263a4cba066949ca88405ff498e8ebc7bba488b03070;
     let prev_shadow_balance_merkle_proof = [
-        0x0000000000000000000000000000000000000000000000000000000000000001,
+        // 0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
         0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765,
         0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee,
@@ -175,7 +178,7 @@ fn test_transfer() {
         0x1eb064b21055ac6a350cf41eb30e4ce2cb19680217df3a243617c2838185ad06,
     ];
     let incoming_balance_merkle_proof = [
-        0x0000000000000000000000000000000000000000000000000000000000000001,
+        // 0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
         0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765,
         0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee,
@@ -246,7 +249,7 @@ fn test_transfer_not_enough_funds() {
         0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f;
     let incoming_balance_root = 0x1ab32fa66d53183dcab6263a4cba066949ca88405ff498e8ebc7bba488b03070;
     let prev_shadow_balance_merkle_proof = [
-        0x0000000000000000000000000000000000000000000000000000000000000001,
+        // 0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
         0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765,
         0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee,
@@ -280,7 +283,7 @@ fn test_transfer_not_enough_funds() {
         0x1eb064b21055ac6a350cf41eb30e4ce2cb19680217df3a243617c2838185ad06,
     ];
     let incoming_balance_merkle_proof = [
-        0x0000000000000000000000000000000000000000000000000000000000000001,
+        // 0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
         0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765,
         0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee,
@@ -350,7 +353,7 @@ fn test_transfer_exactly_enough_funds() {
         0x1d1ed21618f0912fc3242174b9b33e9f05d8c6f60d21697c3c8cbfca8dfe272f;
     let incoming_balance_root = 0x1ab32fa66d53183dcab6263a4cba066949ca88405ff498e8ebc7bba488b03070;
     let prev_shadow_balance_merkle_proof = [
-        0x0000000000000000000000000000000000000000000000000000000000000001,
+        // 0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
         0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765,
         0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee,
@@ -384,7 +387,7 @@ fn test_transfer_exactly_enough_funds() {
         0x1eb064b21055ac6a350cf41eb30e4ce2cb19680217df3a243617c2838185ad06,
     ];
     let incoming_balance_merkle_proof = [
-        0x0000000000000000000000000000000000000000000000000000000000000001,
+        // 0x0000000000000000000000000000000000000000000000000000000000000001,
         0x20a3af0435914ccd84b806164531b0cd36e37d4efb93efab76913a93e1f30996,
         0x217126fa352c326896e8c2803eec8fd63ad50cf65edfef27a41a9e32dc622765,
         0x0e28a61a9b3e91007d5a9e3ada18e1b24d6d230c618388ee5df34cacd7397eee,

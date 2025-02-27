@@ -19,8 +19,8 @@ fn main(
     // information that could be used to id sender
     // hashes needed to re-construct the merkle root for both trees
     // if this was public somone would be able to link youre previous txns together
-    prev_shadow_balance_merkle_proof: [Field; 32],
-    incoming_balance_merkle_proof: [Field; 32],
+    prev_shadow_balance_merkle_proof: [Field; 31],
+    incoming_balance_merkle_proof: [Field; 31],
     // private key
     secret: Field,
     // incoming balance

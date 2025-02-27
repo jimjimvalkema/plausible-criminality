@@ -3,8 +3,6 @@ import privateTransactionCircuit from '../circuits/privateTransfer/target/privat
 import os from 'os';
 import { Noir } from "@noir-lang/noir_js";
 import { UltraPlonkBackend } from '@aztec/bb.js';
-import fs from 'fs/promises';
-
 
 const noirJsInputs = {
     transfer_amount: "0x0000000000000000000000000000000000000000000000000000000000000005",
@@ -118,3 +116,4 @@ console.log({ etherscanFormat });
 console.log('Proof saved to proof.json');
 const verifiedByJs = await backend.verifyProof(proof);
 console.log("privateTransactionProof: ", { verifiedByJs })
+
