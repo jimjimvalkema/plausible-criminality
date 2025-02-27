@@ -1,7 +1,9 @@
+
 import { ethers } from "ethers";
 import UltraAnonDeploymentArtifact from "../artifacts/contracts/UltraAnon.sol/UltraAnon.json" with { type: "json" }
 import { syncInComingBalanceTree as syncIncomingBalanceTree, syncShadowTree } from "../scripts/syncMaxing.js"
 import { hashAddress, hashNullifierKey, hashNullifierValue, hashShadowBalanceTreeLeaf, hashIncomingBalanceTreeLeaf } from "../scripts/hashor.js"
+
 import { poseidon1, poseidon2 } from "poseidon-lite";
 import privateTransactionCircuit from '../circuits/privateTransfer/target/privateTransfer.json'  with { type: "json" }; //assert {type: 'json'};
 // import os from 'os';
@@ -11,12 +13,14 @@ window.poseidon1 = poseidon1
 window.poseidon2 = poseidon2
 window.syncInComingBalanceTree = syncIncomingBalanceTree
 window.syncShadowTree = syncShadowTree
+window.syncShadowBalance = syncShadowBalance
 
 window.hashAddress = hashAddress
 
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
 const ultraAnonAddress = "0xC7F718b9F9aDD33CfbEc430d3EC877d4Ed49Ad39"//UltraAnonDeploymentArtifact.
 const deploymentBlock = 7793115;
+window.deploymentBlock = deploymentBlock
 const CHAININFO = {
     chainId: "0xaa36a7",
     rpcUrls: ["https://1rpc.io/sepolia"],
@@ -66,12 +70,15 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
     // @notice shadowBalanceTree, incomingBalanceTree are promises
     const shadowBalanceTree = syncShadowTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
     const incomingBalanceTree = syncIncomingBalanceTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
+
     window.incomingBalanceTree = incomingBalanceTree;
+
     const ultraAnonSenderAddress = hashAddress(secret)
 
 
     //TODO sync correct nonce and shadow balance
     const shadowBalance = 0n;
+
     const shadowNonce = 0n;
 
     const nullifierValue = hashNullifierValue({ balance: shadowBalance, nonce: shadowNonce, secret: secret });
@@ -179,6 +186,7 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
     console.log({ noirJsInputs })
 
     const proof = await makePrivateTransferNoirProof({ noirJsInputs });
+
 
     const contractCallInputs = {
         to: to,

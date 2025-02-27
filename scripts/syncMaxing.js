@@ -1,6 +1,6 @@
 /// ooooooooooooo am synciiiinggg
 import { MerkleTree } from 'fixed-merkle-tree';
-import { ethers } from "ethers"
+import { ethers, wordlists } from "ethers"
 import { poseidon2 } from 'poseidon-lite';
 
 import {hashNullifierKey} from "../scripts/hashor.js"
@@ -12,11 +12,6 @@ const ZERO = ethers.toBeHex(BigInt(ethers.keccak256(new TextEncoder().encode("to
 const HASH_FUNCTION = (left, right) => ethers.toBeHex(poseidon2([BigInt(left), BigInt(right)]))
 
 
-export async function syncShadowBalance({secret, tokenContract, startBlock, noncesPerEventScan=20, chunkSizeEventScan=5000}) {
-    // TODO do the thing
-    return {latestNonce, shadowBalance}
-
-}
 
 
 /**
@@ -45,23 +40,30 @@ async function queryEventInChunks({chunksize=5000,filter,startBlock,contract}){
  * @param {*} param0 
  * @returns {Promise<leaf[]>} leaves
  */
-export async function getLeaves({contract, startBlock, eventName}) {
+export async function getLeaves({contract, startBlock, eventName, chunksize=5000}) {
     const eventFilter = contract.filters[eventName]()
-    const newLeafEvents =await  queryEventInChunks({chunksize:5000,filter:eventFilter,startBlock:startBlock,contract:contract})
+    const newLeafEvents = await queryEventInChunks({chunksize:chunksize,filter:eventFilter,startBlock:startBlock,contract:contract})
     const abiCoder = new ethers.AbiCoder()
     const types = ["uint32", "uint256"]
     const leaves = newLeafEvents.map((event)=> {
         const decodedData = abiCoder.decode(types,event.data)
-        return {"leafHash":BigInt(event.topics[1]), "index": decodedData[0], "timeStamp":decodedData[1]}
+        const leafHash = BigInt(event.topics[1])
+        const index = decodedData[0]
+        const timeStamp = decodedData[1]
+        return {leafHash, index , timeStamp}
     })
     return leaves
 }
 
 
-export async function syncInComingBalanceTree({contract, startBlock}) {
-    const newLeaves = await getLeaves({contract, startBlock, eventName:"IncomBalNewLeaf"}) 
-    const leafUpdates = await getLeaves({contract, startBlock, eventName:"IncomBalUpdatedLeaf"}) 
-    //console.log({leafUpdates, newLeaves})
+export async function syncInComingBalanceTree({contract, startBlock, eventScanChunksize=5000}) {
+    //event scannoooor
+    const newLeaves = await getLeaves({contract, startBlock, eventName:"IncomBalNewLeaf", chunksize:eventScanChunksize}) 
+    const leafUpdates = await getLeaves({contract, startBlock, eventName:"IncomBalUpdatedLeaf", chunksize:eventScanChunksize}) 
+
+ 
+    
+    // update all newLeafes with leafUpdates and put them in currentLeaves (<- the real leaves of the current tree)
     const currentLeaves = newLeaves;
     for (const leafUpdate of leafUpdates) {
         const leafUpdateIsNewer = (leafUpdate.timeStamp >  currentLeaves[leafUpdate.index].timeStamp) 
@@ -71,16 +73,76 @@ export async function syncInComingBalanceTree({contract, startBlock}) {
             currentLeaves[leafUpdate.index] = leafUpdate
         }
     }
+
+    // we only want the hashes now
     const leavesOnlyHashes = currentLeaves.map((leaf)=>ethers.toBeHex(leaf.leafHash));
     const tree = new MerkleTree(MERKLETREEDEPTH, leavesOnlyHashes, { hashFunction: HASH_FUNCTION, zeroElement: ZERO })
     return tree
 }
 
-export async function syncShadowTree({contract, startBlock}) {
-    const leaves = await getLeaves({contract, startBlock, eventName:"ShadowNewLeaf"}) 
+export async function syncShadowTree({contract, startBlock, eventScanChunksize=5000}) {
+    //event scannoooor
+    const leaves = await getLeaves({contract, startBlock, eventName:"ShadowNewLeaf", chunksize:eventScanChunksize}) 
+    // we only want the hashes now
     const leavesOnlyHashes = leaves.map((leaf)=>ethers.toBeHex(leaf.leafHash));
     const tree = new MerkleTree(MERKLETREEDEPTH, leavesOnlyHashes, { hashFunction: HASH_FUNCTION, zeroElement: ZERO })
     return tree
+}
+
+export async function syncShadowBalance({contract, startBlock, secret, noncesPerScan=20,chunksize=5000  }) {
+    let lastNullifierFound;
+    let isLastNullifierFound = false
+    let lastNonceFound = 0n
+    const allNullifierKeysAndAmounts = []
+    while (isLastNullifierFound === false) {
+        const nonces = (new Array(noncesPerScan)).fill(0).map((v,i)=> lastNonceFound+BigInt(i))
+
+        // TODO  change start block
+        const nullifierKeys = await scanForNullifierKeys({contract, startBlock, nonces, secret,chunksize })
+        lastNullifierFound = nullifierKeys[nullifierKeys.length-1]
+        if(lastNullifierFound===undefined) {
+            lastNullifierFound = {nonce:0n, blockNumber:startBlock}
+
+        }
+
+
+
+        // cant have a nonce that is higher appear in a block before a lower nonce
+        startBlock = lastNullifierFound.blockNumber
+
+        allNullifierKeysAndAmounts.push(nullifierKeys)
+
+        if (nullifierKeys.length < noncesPerScan) {
+            isLastNullifierFound = true
+            break;
+        }
+    }
+    //[1,2,3,4,5].reduce((total, val) => total + val,0);
+    const totalShadowBalance = allNullifierKeysAndAmounts.flat().reduce((total,nullifierKey)=>total += nullifierKey.amountSent, 0n)
+    return {latestNonce: lastNullifierFound.nonce, shadowBalance: totalShadowBalance}
+    
+}
+
+export async function scanForNullifierKeys({contract, startBlock, nonces, secret,chunksize=5000 }) {
+    const nullifierKeys = nonces.map((nonce)=>hashNullifierKey({nonce, secret}))
+
+    //scanning
+    const eventName = "NullifierAdded"
+    const eventFilter = contract.filters[eventName]([...nullifierKeys])
+    const events = await queryEventInChunks({chunksize:chunksize,filter:eventFilter,startBlock:startBlock,contract:contract})
+    
+    // decoding
+    const abiCoder = new ethers.AbiCoder()
+    const types = ["uint256"]
+    const nullifierKeysWithAmounts = events.map((event, i)=>{
+        const nonce = nonces[i]
+        const nullifierKey = BigInt(event.topics[1])
+        const decodedData = abiCoder.decode(types,event.data)
+        const amountSent = decodedData[0]
+        return {nullifierKey, amountSent, nonce, blockNumber: event.blockNumber}
+    })
+
+    return nullifierKeysWithAmounts
 }
 
 //leaves = await syncNewLeafs({contract:ultraAnonContract, startBlock:7791355, eventName:"IncomBalUpdatedLeaf"})
