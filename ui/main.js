@@ -82,8 +82,8 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
 
     const shadowNonce = 0n;
 
-    const nullifierValue = hashNullifierValue({ balance: shadowBalance, nonce: shadowNonce, secret: secret });
-    const nullifierKey = hashNullifierKey({ nonce: shadowNonce, secret: secret });
+    const nullifierValue = hashNullifierValue({ balance: shadowBalance+amount, nonce: shadowNonce+1n, secret: secret });
+    const nullifierKey = hashNullifierKey({ nonce: shadowNonce+1n, secret: secret });
 
     const shadowBalanceTreeLeaf = hashShadowBalanceTreeLeaf(nullifierKey, nullifierValue);
     // console.log('Generated leaf:', shadowBalanceTreeLeaf);
