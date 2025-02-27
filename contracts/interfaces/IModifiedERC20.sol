@@ -32,10 +32,10 @@ interface IModifiedERC20 {
     function balanceOf(address account) external view returns (uint256);
 
     // TODO describe this
-    function publicTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot, uint256 incomingBalanceRoot, bytes[] calldata proof) external returns (bool);
+    function publicTransfer(address owner, address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot, uint256 incomingBalanceRoot, bytes calldata proof) external returns (bool);
 
 
-    function privateTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot, uint256 incomingBalanceRoot, bytes[] calldata proof) external returns (bool);
+    function privateTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot,uint256 incomingBalanceRoot, bytes calldata proof) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be

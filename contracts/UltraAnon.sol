@@ -47,7 +47,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      */
-    function publicTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot, uint256 incomingBalanceRoot, bytes[] calldata proof) public virtual returns (bool) {
+    function publicTransfer(address owner, address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot, uint256 incomingBalanceRoot, bytes calldata proof) public virtual returns (bool) {
         //check roots
         require(shadowIsKnownRoot(shadowBalanceRoot),"shadowBalance root is not known by the contract. Its either stale or invalid");
         require(incomBalIsKnownRoot(incomingBalanceRoot),"incomingBalance root is not known by the contract. Its either stale or invalid");
@@ -57,7 +57,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         emit NullifierAdded(nullifierKey, value);
         // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
         
-        address owner = _msgSender();
+        //address owner = _msgSender();
         _transfer(owner, to, value);
 
         // TODO
@@ -67,7 +67,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         return true;
     }
     
-    function privateTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot,uint256 incomingBalanceRoot, bytes[] calldata proof) public virtual returns (bool) {
+    function privateTransfer(address to, uint256 value,uint256 nullifierValue,uint256 nullifierKey,uint256 shadowBalanceRoot,uint256 incomingBalanceRoot, bytes calldata proof) public virtual returns (bool) {
         //check roots
         require(shadowIsKnownRoot(shadowBalanceRoot),"shadowBalance root is not known by the contract. Its either stale or invalid");
         require(incomBalIsKnownRoot(incomingBalanceRoot),"incomingBalance root is not known by the contract. Its either stale or invalid");
@@ -77,8 +77,13 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         emit NullifierAdded(nullifierKey, value);
         // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
 
-        address owner = _msgSender();
-        _transfer(owner, to, value);
+        // update the balance (cant use _transfer or _update since those need a from address )
+        uint256 newRecipientBalance = _balances[to] + value;
+        _balances[to] = newRecipientBalance;
+        _updateIncomingBalanceTree(to, newRecipientBalance);
+
+        emit Transfer(address(0), to, value);
+
 
         // TODO
         // formatPublic inputs(value, nullifierValue, nullifierKey, shadowBalanceRoot, incomingBalanceRoot, to)
@@ -88,15 +93,15 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
     }
 
     function addNullifier(uint256 nullifierKey, uint256 nullifierValue) private {
-            // check that nullifierKey doesn't exist yet
-            require(nullifiers[nullifierKey] == 0, "nullifierKey cant be used twice");
+        // check that nullifierKey doesn't exist yet
+        require(nullifiers[nullifierKey] == 0, "nullifierKey cant be used twice");
 
-            // add nullifier 
-            nullifiers[nullifierKey] = nullifierValue;
+        // add nullifier 
+        nullifiers[nullifierKey] = nullifierValue;
 
-            // insert into shadowBalanceTree
-            uint256 shadowBalanceLeaf = hashShadowBalanceLeaf(nullifierKey, nullifierValue);
-            _shadowInsert(shadowBalanceLeaf);
+        // insert into shadowBalanceTree
+        uint256 shadowBalanceLeaf = hashShadowBalanceLeaf(nullifierKey, nullifierValue);
+        _shadowInsert(shadowBalanceLeaf);
     }
 
     function hashIncomBalTreeLeaf(address _address, uint256 _balance) public pure returns(uint256){

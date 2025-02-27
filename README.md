@@ -32,7 +32,7 @@ cp circuits/test/target/contract.sol contracts/verifier.sol
 
 deploy
 ```shell
-yarn hardhat ignition deploy ./ignition/modules/Verifier.cjs --verify  --network sepolia;
+yarn hardhat run scripts/deploy.js --network sepolia;
 ```
 
 verify etherscan
@@ -40,10 +40,10 @@ verify etherscan
 yarn hardhat ignition verify chain-11155111 --include-unrelated-contracts
 ```
 
-try out contract interaction 
+<!-- try out contract interaction 
 ```shell
 yarn hardhat run test/contractinteractionTest.js 
-```
+``` -->
 
 
 UltraAnon test (doesn't verifying proofs): https://sepolia.etherscan.io/address/0xA38db958dcb4Dc0246BBdD6010bb69dCD005c9f5#code

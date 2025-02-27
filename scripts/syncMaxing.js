@@ -1,13 +1,22 @@
 /// ooooooooooooo am synciiiinggg
-import { ethers } from "ethers"
 import { MerkleTree } from 'fixed-merkle-tree';
+import { ethers } from "ethers"
 import { poseidon2 } from 'poseidon-lite';
+
+import {hashNullifierKey} from "../scripts/hashor.js"
 
 const FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 const MERKLETREEDEPTH = 31
 const ZERO = ethers.toBeHex(BigInt(ethers.keccak256(new TextEncoder().encode("tornado"))) % FIELD_SIZE) //tornadocash wow so cool edgy!!!
 //const HASH_FUNCTION = (left, right) => ethers.toBeHex(poseidon2([ethers.toBigInt(left), ethers.toBigInt(right)]))
 const HASH_FUNCTION = (left, right) => ethers.toBeHex(poseidon2([BigInt(left), BigInt(right)]))
+
+
+export async function syncShadowBalance({secret, tokenContract, startBlock, noncesPerEventScan=20, chunkSizeEventScan=5000}) {
+    // TODO do the thing
+    return {latestNonce, shadowBalance}
+
+}
 
 
 /**
