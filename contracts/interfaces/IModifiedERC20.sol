@@ -54,10 +54,8 @@ interface IModifiedERC20 {
         uint256 nullifierKey,
         uint256 shadowBalanceRoot,
         uint256 incomingBalanceRoot,
-        address owner,
         bytes calldata proof
     ) external returns (bool);
-
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be

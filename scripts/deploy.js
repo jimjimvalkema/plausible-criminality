@@ -48,8 +48,8 @@ async function deployPoseidon() {
 }
 
 async function main() {
-    const privateTransferVerifierAddress = "0x0000000000000000000000000000000000000000" // TODO deploy it here instead of hardcoding
-    const publicTransferVerifierAddress = "0x0000000000000000000000000000000000000000"// TODO deploy it here instead of hardcoding
+    const privateTransferVerifierAddress = "0x10fEC39a0B090Ed93Cbbd1f80E5AC373C21cF1f7" // TODO deploy it here instead of hardcoding
+    const publicTransferVerifierAddress = "0xd7C3FD622beD4A436dd33E1aaCeF9d7BA156BA4A"// TODO deploy it here instead of hardcoding
     const PoseidonT3Address = await deployPoseidon()
     const { UltraAnon } = await hre.ignition.deploy(UltraAnonModule, {
         parameters: {
@@ -64,7 +64,7 @@ async function main() {
 
     //verify (source: https://hardhat.org/hardhat-runner/plugins/nomiclabs-hardhat-etherscan#using-programmatically)
     //TODO check that it actually verifies since the contract is already deployed on sepolia
-    const PoseidonT3Verification =  hre.run("verify:verify", {
+    const PoseidonT3Verification = hre.run("verify:verify", {
         address: PoseidonT3Address,
         //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
         constructorArguments: [],
@@ -77,21 +77,21 @@ async function main() {
     //     constructorArguments: [],
     //     value: 0n
     // });
-    console.log({UltraAnon})
-    const UltraAnonVerification =  hre.run("verify:verify", {
+    console.log({ UltraAnon })
+    const UltraAnonVerification = hre.run("verify:verify", {
         address: UltraAnon.target,
         //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
-        constructorArguments: [merkleTreeDepth,privateTransferVerifierAddress, publicTransferVerifierAddress],
+        constructorArguments: [merkleTreeDepth, privateTransferVerifierAddress, publicTransferVerifierAddress],
         value: 0n,
         libraries: {
-          PoseidonT3: PoseidonT3Address,
+            PoseidonT3: PoseidonT3Address,
         }
     });
 
     await Promise.all([PoseidonT3Verification, UltraAnonVerification])
 
 
-    
+
 
     // quick sanity check
     const preImage = [ethers.zeroPadValue("0x0123", 32), ethers.zeroPadValue("0x0456", 32)]
