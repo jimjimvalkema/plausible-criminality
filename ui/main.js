@@ -1,7 +1,7 @@
 
 import { ethers } from "ethers";
 import UltraAnonDeploymentArtifact from "../artifacts/contracts/UltraAnon.sol/UltraAnon.json" with { type: "json" }
-import { syncInComingBalanceTree as syncIncomingBalanceTree, syncShadowTree } from "../scripts/syncMaxing.js"
+import { syncInComingBalanceTree as syncIncomingBalanceTree, syncShadowTree, syncShadowBalance } from "../scripts/syncMaxing.js"
 import { hashAddress, hashNullifierKey, hashNullifierValue, hashShadowBalanceTreeLeaf, hashIncomingBalanceTreeLeaf } from "../scripts/hashor.js"
 
 import { poseidon1, poseidon2 } from "poseidon-lite";
@@ -9,6 +9,7 @@ import privateTransactionCircuit from '../circuits/privateTransfer/target/privat
 // import os from 'os';
 import { Noir } from "@noir-lang/noir_js";
 import { UltraPlonkBackend } from '@aztec/bb.js';
+import {makeNoirTest} from "../scripts/makeNoirTest.js"
 window.poseidon1 = poseidon1
 window.poseidon2 = poseidon2
 window.syncInComingBalanceTree = syncIncomingBalanceTree
@@ -183,7 +184,7 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
         prev_shadow_balance_index: ethers.toBeHex(shadowBalanceTreeLeafIndex),
         incoming_balance_index: ethers.toBeHex(incomingBalanceTreeLeafIndex),
     };
-    console.log({ noirJsInputs })
+
 
     const proof = await makePrivateTransferNoirProof({ noirJsInputs });
 
@@ -218,10 +219,13 @@ await main()
 async function makePrivateTransferNoirProof({
     noirJsInputs
 }) {
+    window.noirJsInputs = noirJsInputs
+    console.log({ noirJsInputs })
+    console.log(makeNoirTest({noirJsInputs}))
     const noir = new Noir(privateTransactionCircuit);
 
     // TODO: make this actually use dynamic number of cpus
-    const backend = new UltraPlonkBackend(privateTransactionCircuit.bytecode, { threads: 12 });
+    const backend = new UltraPlonkBackend(privateTransactionCircuit.bytecode, { threads: navigator.hardwareConcurrency });
     const { witness } = await noir.execute(noirJsInputs);
     console.log({ witness })
     const proof = await backend.generateProof(witness);
