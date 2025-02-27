@@ -77,9 +77,9 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
     const ultraAnonSenderAddress = hashAddress(secret)
 
 
-    // const { prevShadowNonce, prevShadowBalance } = await syncShadowBalance({ contract: ultraAnonContract, startBlock: deploymentBlock, secret: secret });
-    const prevShadowNonce = 1;
-    const prevShadowBalance = 1;
+    const { prevShadowNonce, prevShadowBalance } = await syncShadowBalance({ contract: ultraAnonContract, startBlock: deploymentBlock, secret: secret });
+    // const prevShadowNonce = 1;
+    // const prevShadowBalance = 1;
     console.log({ prevShadowNonce });
     console.log({ prevShadowBalance });
     const nullifierValue = hashNullifierValue({ balance: BigInt(prevShadowBalance) + amount, nonce: BigInt(prevShadowNonce) + 1n, secret: secret });
