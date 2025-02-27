@@ -56,6 +56,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      */
+
     function publicTransfer(
         address to,
         uint256 value,
@@ -66,6 +67,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         address owner,
         bytes calldata proof
     ) external override returns (bool) {
+
         //check roots
         require(
             shadowIsKnownRoot(shadowBalanceRoot),
@@ -99,6 +101,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         return true;
     }
+
 
     function verifyPublicTransferProof(
         uint256 transferAmount,
@@ -138,6 +141,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         address owner,
         bytes calldata proof
     ) external override returns (bool) {
+
         //check roots
         require(
             shadowIsKnownRoot(shadowBalanceRoot),
@@ -153,7 +157,12 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         emit NullifierAdded(nullifierKey, value);
         // maybe also track amount spend per nullifierKey inside mapping so its easier to sync?
 
-        _transfer(owner, to, value);
+        // update the balance (cant use _transfer or _update since those need a from address )
+        uint256 newRecipientBalance = _balances[to] + value;
+        _balances[to] = newRecipientBalance;
+        _updateIncomingBalanceTree(to, newRecipientBalance);
+
+        emit Transfer(address(0), to, value);
 
         require(
             verifyPrivateTransferProof(
@@ -170,6 +179,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         return true;
     }
+
 
     function verifyPrivateTransferProof(
         uint256 transferAmount,
@@ -195,6 +205,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         return
             IUltraVerifier(privateTransferVerifier).verify(proof, publicInputs);
+
     }
 
     function addNullifier(
