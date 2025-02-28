@@ -197,7 +197,7 @@ async function relayPrivateTransferRequest(contractCallInputs) {
     console.log({ requestBody })
 
     try {
-        const response = await fetch('http://localhost:8000/private_transfer', {
+        const response = await fetch('http://164.92.84.12:8000/private_transfer', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ async function relayPublicTransferRequest(contractCallInputs) {
     console.log({ requestBody })
 
     try {
-        const response = await fetch('http://localhost:8000/public_transfer', {
+        const response = await fetch('http://164.92.84.12:8000/public_transfer', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
