@@ -48,16 +48,16 @@ async function deployPoseidon() {
 }
 
 async function main() {
-    const privateTransferVerifierAddress = "0x10fEC39a0B090Ed93Cbbd1f80E5AC373C21cF1f7" // TODO deploy it here instead of hardcoding
-    const publicTransferVerifierAddress = "0xd7C3FD622beD4A436dd33E1aaCeF9d7BA156BA4A"// TODO deploy it here instead of hardcoding
+    //const privateTransferVerifierAddress = "0x10fEC39a0B090Ed93Cbbd1f80E5AC373C21cF1f7" // TODO deploy it here instead of hardcoding
+    //const publicTransferVerifierAddress = "0xd7C3FD622beD4A436dd33E1aaCeF9d7BA156BA4A"// TODO deploy it here instead of hardcoding
     const PoseidonT3Address = await deployPoseidon()
-    const { UltraAnon } = await hre.ignition.deploy(UltraAnonModule, {
+    const { UltraAnon, privateTransferVerifier, publicTransferVerifier } = await hre.ignition.deploy(UltraAnonModule, {
         parameters: {
             UltraAnonModule: {
                 merkleTreeDepth,
-                PoseidonT3Address,
-                privateTransferVerifierAddress,
-                publicTransferVerifierAddress
+                PoseidonT3Address
+                // privateTransferVerifierAddress,
+                // publicTransferVerifierAddress
             }
         },
     });
@@ -77,18 +77,31 @@ async function main() {
     //     constructorArguments: [],
     //     value: 0n
     // });
-    console.log({ UltraAnon })
     const UltraAnonVerification = hre.run("verify:verify", {
         address: UltraAnon.target,
         //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
-        constructorArguments: [merkleTreeDepth, privateTransferVerifierAddress, publicTransferVerifierAddress],
+        constructorArguments: [merkleTreeDepth, privateTransferVerifier.target, publicTransferVerifier.target],
         value: 0n,
         libraries: {
             PoseidonT3: PoseidonT3Address,
         }
     });
 
-    await Promise.all([PoseidonT3Verification, UltraAnonVerification])
+    const privateTransferVerifierVerification = hre.run("verify:verify", {
+        address: privateTransferVerifier.target,
+        //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
+        constructorArguments: [],
+        value: 0n
+    });
+
+    const publicTransferVerifierVerification = hre.run("verify:verify", {
+        address: publicTransferVerifier.target,
+        //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
+        constructorArguments: [],
+        value: 0n
+    });
+
+    await Promise.all([PoseidonT3Verification, UltraAnonVerification, privateTransferVerifierVerification, publicTransferVerifierVerification])
 
 
 
