@@ -2739,8 +2739,10 @@ dependencies = [
  "alloy",
  "anyhow",
  "dotenv",
+ "hex",
  "rocket",
  "serde",
+ "serde_json",
  "tokio",
 ]
 
