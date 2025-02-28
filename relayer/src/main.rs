@@ -1,20 +1,18 @@
+mod cors;
+mod types;
 use alloy::{
     contract::{ContractInstance, Interface},
     dyn_abi::DynSolValue,
-    hex::{FromHex, ToHexExt},
+    hex::ToHexExt,
     network::EthereumWallet,
-    primitives::{Address, Bytes},
-    providers::{Provider, ProviderBuilder},
+    primitives::Address,
+    providers::ProviderBuilder,
     signers::local::PrivateKeySigner,
 };
-use rocket::{
-    fairing::{Fairing, Info, Kind},
-    http::{Header, Method},
-    post, routes,
-    serde::json::Json,
-    Request, Response, State,
-};
-use serde::{Deserialize, Serialize};
+use cors::Cors;
+use rocket::{post, routes, serde::json::Json, State};
+use types::TransactionResponse;
+use types::{PrivateTransactionRequest, PublicTransactionRequest};
 #[macro_use]
 extern crate rocket;
 extern crate dotenv;
@@ -26,99 +24,9 @@ use std::env;
 const CONTRACT_ABI_PATH: &str =
     "../ignition/deployments/chain-11155111/artifacts/UltraAnonModule#UltraAnon.json";
 
-// Create a CORS fairing
-pub struct CORS;
-
-#[rocket::async_trait]
-impl Fairing for CORS {
-    fn info(&self) -> Info {
-        Info {
-            name: "CORS Fairing",
-            kind: Kind::Response | Kind::Request,
-        }
-    }
-
-    async fn on_request(&self, request: &mut Request<'_>, _: &mut rocket::Data<'_>) {
-        // If it's an OPTIONS request, configure it to be immediately handled
-        if request.method() == Method::Options {
-            request.local_cache(|| true);
-        }
-    }
-
-    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
-        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
-        response.set_header(Header::new(
-            "Access-Control-Allow-Methods",
-            "POST, GET, OPTIONS",
-        ));
-        response.set_header(Header::new(
-            "Access-Control-Allow-Headers",
-            "Content-Type, Authorization",
-        ));
-
-        // If it's an OPTIONS request, set the status to 200 OK
-        if request.method() == Method::Options {
-            response.set_status(rocket::http::Status::Ok);
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct PrivateTransactionRequest {
-    to: String,
-    value: String,
-    nullifier_value: String,
-    nullifier_key: String,
-    shadow_balance_root: String,
-    incoming_balance_root: String,
-    proof: String,
-}
-
-impl PrivateTransactionRequest {
-    fn to_args(&self) -> Vec<DynSolValue> {
-        vec![
-            // Convert address string to DynSolValue
-            DynSolValue::Address(self.to.parse().expect("Invalid address")),
-            // Convert numeric strings to DynSolValue::Uint
-            DynSolValue::Uint(self.value.parse().expect("Invalid value"), 256),
-            DynSolValue::Uint(
-                self.nullifier_value
-                    .parse()
-                    .expect("Invalid nullifier value"),
-                256,
-            ),
-            DynSolValue::Uint(
-                self.nullifier_key.parse().expect("Invalid nullifier key"),
-                256,
-            ),
-            DynSolValue::Uint(
-                self.shadow_balance_root
-                    .parse()
-                    .expect("Invalid shadow balance root"),
-                256,
-            ),
-            DynSolValue::Uint(
-                self.incoming_balance_root
-                    .parse()
-                    .expect("Invalid incoming balance root"),
-                256,
-            ),
-            // Convert proof string (likely hex) to DynSolValue::Bytes
-            DynSolValue::Bytes(hex::decode(&self.proof).expect("Invalid proof hex")),
-        ]
-    }
-}
-
-#[derive(Debug, Serialize)]
-struct TransactionResponse {
-    success: bool,
-    txn_hash: Option<String>,
-    error: Option<String>,
-}
-
-#[post("/", format = "json", data = "<request>")]
-async fn private_transfer(
-    request: Json<PrivateTransactionRequest>,
+async fn transfer_logic(
+    function_name: &str,
+    function_args: &[DynSolValue],
     state: &State<AppState>,
 ) -> Json<TransactionResponse> {
     let signer: PrivateKeySigner = state.private_key.parse().expect("should parse private key");
@@ -140,8 +48,7 @@ async fn private_transfer(
     let contract_address = state.contract_address;
     let contract = ContractInstance::new(contract_address, provider.clone(), Interface::new(abi));
 
-    let args = request.to_args();
-    let call_builder = contract.function("privateTransfer", &args);
+    let call_builder = contract.function(function_name, function_args);
 
     if let Err(err) = call_builder {
         let err = format!("call builder error: {}", err);
@@ -173,7 +80,7 @@ async fn private_transfer(
             })
         }
         Err(err) => {
-            let err = format!("transaction execution error: {}", err.to_string());
+            let err = format!("transaction execution error: {}", err);
             Json(TransactionResponse {
                 success: false,
                 txn_hash: None,
@@ -181,6 +88,24 @@ async fn private_transfer(
             })
         }
     }
+}
+
+#[post("/", format = "json", data = "<request>")]
+async fn private_transfer(
+    request: Json<PrivateTransactionRequest>,
+    state: &State<AppState>,
+) -> Json<TransactionResponse> {
+    let args = request.to_args();
+    transfer_logic("privateTransfer", &args, state).await
+}
+
+#[post("/", format = "json", data = "<request>")]
+async fn public_transfer(
+    request: Json<PublicTransactionRequest>,
+    state: &State<AppState>,
+) -> Json<TransactionResponse> {
+    let args = request.to_args();
+    transfer_logic("publicTransfer", &args, state).await
 }
 
 #[get("/")]
@@ -218,10 +143,11 @@ async fn main() -> Result<()> {
     };
 
     let _ = rocket::build()
-        .attach(CORS)
+        .attach(Cors)
         .manage(app_state)
         .mount("/", routes![hello])
         .mount("/private_transfer", routes![private_transfer])
+        .mount("/public_transfer", routes![public_transfer])
         .launch()
         .await?;
 
