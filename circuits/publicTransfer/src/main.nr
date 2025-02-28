@@ -26,7 +26,7 @@ fn main(
     // incoming balance
     incoming_balance: Field,
     // num txns
-    prev_nonce: Field,
+    nonce: Field,
     // total amount privately sent
     prev_shadow_balance: Field,
     // position of the account from the array that holds the merkle roots
@@ -47,7 +47,7 @@ fn main(
         sender_account,
         secret,
         incoming_balance,
-        prev_nonce,
+        nonce,
         prev_shadow_balance,
         prev_shadow_balance_index,
         incoming_balance_index,
