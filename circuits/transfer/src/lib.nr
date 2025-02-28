@@ -103,6 +103,7 @@ pub fn transfer(
     let incoming_balance_leaf = poseidon::bn254::hash_2([sender_account, incoming_balance]);
     println(f"sender_account: {sender_account}");
     println(f"incoming_balance: {incoming_balance}");
+    println(f"incoming_balance: {incoming_balance_leaf}");
     let computed_incoming_balance_root = compute_merkle_root(
         incoming_balance_leaf,
         incoming_balance_index,
@@ -118,7 +119,7 @@ pub fn transfer(
 
     assert(
         computed_incoming_balance_root == incoming_balance_root,
-        "computed incoming balance tree root doesn't match shadow balance tree root passed in as parameter",
+        "computed incoming balance tree root doesn't match incoming balance tree root passed in as parameter",
     );
 
     // make sure user has enough funds to send

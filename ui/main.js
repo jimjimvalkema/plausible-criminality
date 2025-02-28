@@ -20,7 +20,7 @@ window.hashAddress = hashAddress
 window.hashNullifierKey =hashNullifierKey
 
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
-const ultraAnonAddress = "0x9844BAb7496789e74Ce1814bc8c1b375DB6fEBb8"//UltraAnonDeploymentArtifact.
+const ultraAnonAddress = "0x4C1F27c47a61085cE7894F7AeDa77193FF68cA21"//UltraAnonDeploymentArtifact.
 const deploymentBlock = 7793115;
 window.deploymentBlock = deploymentBlock
 const CHAININFO = {
@@ -111,22 +111,33 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
     // incoming balance proof
     const incomingBalanceTreeLeafIndex = await ultraAnonContract.merkleIndexOfAccount(ultraAnonSenderAddress) - 1n;
     const incomingBalanceTreeMerkleProof = (await incomingBalanceTree).path(Number(incomingBalanceTreeLeafIndex)).pathElements;
+    const incomingBalanceTreeRootJs = (await incomingBalanceTree).root
+    console.log({incomingBalanceTreeRootJs})
+    console.log({incomingBalanceTreeMerkleProof})
 
-    // TODO: how to get? lol look up a mapping that doesnt exist yet :P
-    const incomingBalance = 100n;
+    const incomingBalance = await ultraAnonContract.incomingBalance(ultraAnonSenderAddress);
+    console.log({incomingBalance})
 
     const noirJsInputs = {
         transfer_amount: ethers.toBeHex(amount),
+
         nullifier_value: ethers.toBeHex(nullifierValue),
         nullifier_key: ethers.toBeHex(nullifierKey),
+
         prev_shadow_balance_root: (await shadowBalanceTree).root,
         incoming_balance_root: (await incomingBalanceTree).root,
+
         recipient_account: to,
+
         prev_shadow_balance_merkle_proof: shadowBalanceTreeMerkleProof,
         incoming_balance_merkle_proof: incomingBalanceTreeMerkleProof,
+
         secret: ethers.toBeHex(secret),
         sender_account: ultraAnonSenderAddress,
+
         incoming_balance: ethers.toBeHex(incomingBalance),
+
+        
         nonce: ethers.toBeHex(nextShadowNonce),
         prev_shadow_balance: ethers.toBeHex(prevShadowBalance),
         prev_shadow_balance_index: ethers.toBeHex(shadowBalanceTreeLeafIndex),

@@ -119,7 +119,7 @@ export async function syncShadowBalance({contract, startBlock, secret, noncesPer
         }
     }
     //[1,2,3,4,5].reduce((total, val) => total + val,0);
-    const nextNonce = allNullifierKeysAndAmounts.length === 0 ? 0n : lastNullifierFound.nonce + 1n
+    const nextNonce = allNullifierKeysAndAmounts.flat().length === 0 ? 0n : lastNullifierFound.nonce + 1n
     console.log({allNullifierKeysAndAmounts:allNullifierKeysAndAmounts.flat()})
     const totalShadowBalance = allNullifierKeysAndAmounts.flat().reduce((total,nullifierKey)=>total += nullifierKey.amountSent, 0n)
     return {nextNonce: nextNonce, shadowBalance: totalShadowBalance}

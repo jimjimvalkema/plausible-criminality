@@ -23,14 +23,14 @@ generate verifier contracts
 # private transfer
 cd circuits/privateTransfer/; 
 nargo compile; 
-bb write_vk -b ./target/PrivateTransfer.json;
+bb write_vk -b ./target/privateTransfer.json;
 bb contract;
 cd ../..;
 
 # public transfer
 cd circuits/publicTransfer/; 
 nargo compile; 
-bb write_vk -b ./target/PublicTransfer.json;
+bb write_vk -b ./target/publicTransfer.json;
 bb contract;
 cd ../..;
 
@@ -60,4 +60,4 @@ yarn hardhat run test/contractinteractionTest.js
 ``` -->
 
 
-UltraAnon test (doesn't verifying proofs): https://sepolia.etherscan.io/address/0xff18887aa3111f19f6582c32d667eb5cd2ec0214#code
+UltraAnon on sepolia: https://sepolia.etherscan.io/address/0xff18887aa3111f19f6582c32d667eb5cd2ec0214#code

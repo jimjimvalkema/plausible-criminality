@@ -33,10 +33,7 @@ abstract contract ModifiedERC20 is Context, IModifiedERC20, IERC20Errors {
     //mapping(address account => uint256) private _balances;
     mapping(address account => uint256) internal _balances; //needs to be accesible so we can directly update it on private transfer without creating a mint event
 
-    mapping(address account => mapping(address spender => uint256))
-        private _allowances;
-
-    mapping(address => uint256) public incomingBalance; // Increases on receiving private and public txns
+    mapping(address account => mapping(address spender => uint256)) private _allowances;
 
     //uint256 private _totalSupply;
     uint256 internal _totalSupply; // needs to be accesible to be able to modify _update to update the publicBalanceTree
@@ -215,8 +212,6 @@ abstract contract ModifiedERC20 is Context, IModifiedERC20, IERC20Errors {
                 _balances[to] += value;
             }
         }
-
-        incomingBalance[to] += value;
         emit Transfer(from, to, value);
     }
 

@@ -25,7 +25,6 @@ export function hashShadowBalanceTreeLeaf(nullifierKey, nullifierValue) {
 //let prev_nullifier_value = poseidon::bn254::hash_3([prev_shadow_balance, prev_nonce, secret]);
 
 export function hashNullifierKey({ nonce, secret }) {
-    console.log("hashNullifierKey",{ nonce, secret } )
     return poseidon2([nonce, secret])
 }
 
