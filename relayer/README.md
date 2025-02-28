@@ -7,3 +7,5 @@ This is a small webserver that executes smart contract calls for others. This is
 By default it will run locally at port 8000. Requires env vars `PROVIDER_URL`, `CONTRACT_ADDRESS` (ultraAnon contract address) and `PRIVATE_KEY`.
 
 Run with `cargo run` (dev) or `cargo run --release` (prod).
+
+If you run into issues after getting it to work once or twice it's likely your rpc.
