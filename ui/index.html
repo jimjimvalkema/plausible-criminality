@@ -3,13 +3,91 @@
 <head>
     <style>
         body {
-            max-width: max(60%, 600px);
+            max-width: max(50%, 600px);
             margin-inline: auto;
+            font-size: x-large;
         }
+        #txsInterface {
+            font-size:large;
+        }
+
+        .UltraAnonTitle {
+            text-align: center;
+        }
+
     </style>
 </head>
 
 <body>
+    <h1 class="UltraAnonTitle">Ultra Anon</h1>
+    <h6 class="UltraAnonTitle"> Maximum Anonymity set. Maximum plausible deniability. </h6>
+    <div id="privateKeyManager">
+        <select id="accountSelector" name="accountSelector">
+            <option value="">--select accoun TODO "accountSelector" --</option>
+        </select>
+        <button id="generateNewAddress">generate new address TODO "generateNewAddress"</button>
+        <br>
 
-    <script crossorigin type="module" src="./main.js"></script>
+        <label>
+            import private key TODO:
+            <input type="text" id="importPrivateKeyInput" value="TODO importPrivateKeyInput"></input>
+        </label>
+        <button id="importPrivateKeyBtn">import TODO "importPrivateKeyBtn"</button>
+
+
+    </div>
+    <br>
+    <br>
+    
+    
+    <div id="balanceInterface">
+        publicly know balance: <span class="publiclyKnowBalance">TODO "publiclyKnowBalance"</span> <span class="ticker">TODO "ticker"</span>
+        <br>
+        actual balance: <span class="actualBalance">TODO "actualBalance"</span> <span class="ticker">TODO "ticker"</span>
+    </div>
+
+    <div id="transferInterface">
+        <script crossorigin type="module" src="./main.js"></script>
+        <label>
+            recipient address:
+            <input type="text" id="recipientAddressInput" value="TODO recipientAddressInput"></input>
+        </label>
+        <br>
+        <label>
+            amount:
+            <input type="text" id="amountInput" value="TODO amountInput"></input>
+        </label>
+        <br>
+        <button id="publicTransferBtn">transfer publicly TODO "publicTransferBtn"</button>
+        <button id="privateTransferBtn">transfer privately TODO "privateTransferBtn"</button>
+    </div>
+
+    <br>
+    <br>
+
+    <div id="txsInterface">
+        <div id="allPublicTransfers">
+            public transfers:
+            <ul id="allPublicTransfersUl">
+                <li>
+                    TODO allPublicTransfersUl
+                </li>
+
+            </ul>
+        </div>
+        <br>
+
+        <div id="allPrivateTransfers">
+            private transfers
+            <ul id="allPrivateTransfersUl">
+                <li>
+                    TODO allPrivateTransfersUl
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
 </body>
