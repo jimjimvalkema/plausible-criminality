@@ -158,7 +158,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         // update the balance (cant use _transfer or _update since those need a from address )
         _balances[to] = _balances[to] + value;
-        _updateIncomingBalanceTree(to, _balances[to] + value);
+        _updateIncomingBalanceTree(to, _balances[to]);
         incomingBalance[to] += value;
 
         emit Transfer(address(0), to, value);
