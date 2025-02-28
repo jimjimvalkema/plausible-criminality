@@ -60,11 +60,12 @@ async function switchNetwork(network, provider) {
 
 
 async function main() {
-    setEventHandlers()
+    
     const provider = new ethers.BrowserProvider(window.ethereum)
     await switchNetwork(CHAININFO, provider)
     const signer = await provider.getSigner();
     const ultraAnonContract = new ethers.Contract(ultraAnonAddress, ultraAnonAbi, signer)
+    setEventHandlers({ultraAnonContract, deploymentBlock: deploymentBlock})
 
     //debug shite
     window.ethers = ethers
