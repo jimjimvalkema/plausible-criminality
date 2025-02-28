@@ -82,7 +82,7 @@ async function generateIncomingBalanceMerkleProof({incomingBalanceTree, ultraAno
     return {merkleProof: incomingBalanceTreeMerkleProof, leafIndex: BigInt(incomingBalanceTreeLeafIndex)}
 }
 
-async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
+async function generateProofInputs({ amount, to, ultraAnonContract, secret }) {
     ethers.assert(ethers.isAddress(to), "not an address or checksum failed")
     //sync tress
     const shadowBalanceTree = syncShadowTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
@@ -110,7 +110,6 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
     })
 
     const incomingBalance = await ultraAnonContract.incomingBalance(ultraAnonSenderAddress);
-
     const noirJsInputs = {
         transfer_amount: ethers.toBeHex(amount),
 
@@ -137,6 +136,20 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
         incoming_balance_index: ethers.toBeHex(incomingBalanceTreeLeafIndex),
     };
 
+    return {ultraAnonSenderAddress,noirJsInputs, nullifierValue, nullifierKey, shadowBalanceTree: await shadowBalanceTree, incomingBalanceTree: await incomingBalanceTree  }
+    
+}
+
+async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
+
+    const {
+        noirJsInputs, 
+        nullifierValue, 
+        nullifierKey, 
+        shadowBalanceTree, 
+        incomingBalanceTree  
+    } = await generateProofInputs({ amount, to, ultraAnonContract, secret })
+
     console.log("creating proof");
     const proof = await makePrivateTransferNoirProof({ noirJsInputs });
     console.log("proof created");
@@ -146,8 +159,8 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
         value: amount,
         nullifierValue: nullifierValue,
         nullifierKey: nullifierKey,
-        shadowBalanceRoot: BigInt((await shadowBalanceTree).root),
-        incomingBalanceRoot: BigInt((await incomingBalanceTree).root),
+        shadowBalanceRoot: BigInt( shadowBalanceTree.root),
+        incomingBalanceRoot: BigInt( incomingBalanceTree.root),
         proof: proof
     }
 
@@ -163,6 +176,46 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
 }
 window.makePrivateTransfer = makePrivateTransfer
 
+async function makePublicTransfer({ amount, to, ultraAnonContract, secret }) {
+
+    const {
+        noirJsInputs, 
+        nullifierValue, 
+        nullifierKey, 
+        shadowBalanceTree, 
+        incomingBalanceTree ,
+        ultraAnonSenderAddress 
+    } = await generateProofInputs({ amount, to, ultraAnonContract, secret })
+
+    console.log("creating proof");
+    const proof = await makePublicTransferNoirProof({ noirJsInputs });
+    console.log("proof created");
+
+    const contractCallInputs = {
+        to: to,
+        value: amount,
+        nullifierValue: nullifierValue,
+        nullifierKey: nullifierKey,
+        shadowBalanceRoot: BigInt( shadowBalanceTree.root),
+        incomingBalanceRoot: BigInt( incomingBalanceTree.root),
+        owner: ultraAnonSenderAddress,
+        proof: proof
+    }
+    console.log({contractCallInputs})
+
+    ultraAnonContract.publicTransfer(
+        contractCallInputs.to,
+        contractCallInputs.value,
+        contractCallInputs.nullifierValue,
+        contractCallInputs.nullifierKey,
+        contractCallInputs.shadowBalanceRoot,
+        contractCallInputs.incomingBalanceRoot,
+        contractCallInputs.owner,
+        contractCallInputs.proof
+    )
+}
+window.makePublicTransfer = makePublicTransfer
+
 async function makePrivateTransferNoirProof({noirJsInputs}) {
     window.noirJsInputs = noirJsInputs
     console.log(makeNoirTest({ noirJsInputs }))
@@ -174,11 +227,7 @@ async function makePrivateTransferNoirProof({noirJsInputs}) {
     const backend = new UltraPlonkBackend(privateTransactionCircuit.bytecode, { threads: navigator.hardwareConcurrency });
     const { witness } = await noir.execute(noirJsInputs);
     const proof = await backend.generateProof(witness);
-
-    const hexProof = '0x' + Array.from(proof.proof)
-        .map(byte => byte.toString(16).padStart(2, '0'))
-        .join('');
-
+    console.log({proof})
     // const hexPublicInputs = proof.publicInputs.map(input => {
     //     // Convert each input to hex string and ensure it's 64 chars (32 bytes) with 0x prefix
     //     let hexValue = typeof input === 'bigint'
@@ -192,8 +241,19 @@ async function makePrivateTransferNoirProof({noirJsInputs}) {
     // const verifiedByJs = await backend.verifyProof(proof);
     // console.log("privateTransactionProof: ", { verifiedByJs })
 
-    return hexProof
+    return proof.proof
 }
+
+async function makePublicTransferNoirProof({noirJsInputs}) {
+    const noir = new Noir(publicTransactionCircuit);
+    const backend = new UltraPlonkBackend(publicTransactionCircuit.bytecode, { threads: navigator.hardwareConcurrency });
+    const { witness } = await noir.execute(noirJsInputs);
+    const proof = await backend.generateProof(witness);
+    console.log({proof})
+
+    return proof.proof
+}
+
 
 
 async function main() {
