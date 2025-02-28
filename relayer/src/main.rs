@@ -2,8 +2,10 @@ use alloy::{
     contract::{ContractInstance, Interface},
     dyn_abi::DynSolValue,
     hex::{FromHex, ToHexExt},
+    network::EthereumWallet,
     primitives::{Address, Bytes},
     providers::{Provider, ProviderBuilder},
+    signers::local::PrivateKeySigner,
 };
 use rocket::{post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
@@ -76,8 +78,13 @@ async fn private_transfer(
     request: Json<PrivateTransactionRequest>,
     state: &State<AppState>,
 ) -> Json<TransactionResponse> {
+    let signer: PrivateKeySigner = state.private_key.parse().expect("should parse private key");
+    let wallet = EthereumWallet::from(signer.clone());
+
     let provider_url = state.provider_url.clone();
-    let provider = ProviderBuilder::new().on_http(provider_url.parse().unwrap());
+    let provider = ProviderBuilder::new()
+        .wallet(wallet)
+        .on_http(provider_url.parse().unwrap());
 
     // Read the artifact which contains `abi`, `bytecode`, `deployedBytecode` and `metadata`.
     let artifact = std::fs::read(CONTRACT_ABI_PATH).expect("Failed to read artifact");
@@ -143,6 +150,7 @@ struct AppState {
     // I can't be fucked to deal with alloy types rn
     provider_url: String,
     contract_address: Address,
+    private_key: String,
 }
 
 #[rocket::main]
@@ -156,10 +164,14 @@ async fn main() -> Result<()> {
         .context("set CONTRACT_ADDRESS in a .env file")
         .unwrap();
     println!("contract address: {contract_address}");
+    let private_key = env::var("PRIVATE_KEY")
+        .context("set PRIVATE_KEY in a .env file")
+        .unwrap();
 
     let app_state = AppState {
         provider_url,
         contract_address: contract_address.parse().context("parse address").unwrap(),
+        private_key,
     };
 
     let _ = rocket::build()
