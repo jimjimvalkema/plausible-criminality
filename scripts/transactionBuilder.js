@@ -246,14 +246,54 @@ export async function publicTransfer({ amount, to, ultraAnonContract, secret, de
     }
     console.log({ contractCallInputs })
 
-    ultraAnonContract.publicTransfer(
-        contractCallInputs.to,
-        contractCallInputs.value,
-        contractCallInputs.nullifierValue,
-        contractCallInputs.nullifierKey,
-        contractCallInputs.shadowBalanceRoot,
-        contractCallInputs.incomingBalanceRoot,
-        contractCallInputs.owner,
-        contractCallInputs.proof
-    )
+    await relayPublicTransferRequest(contractCallInputs)
+    // ultraAnonContract.publicTransfer(
+    //     contractCallInputs.to,
+    //     contractCallInputs.value,
+    //     contractCallInputs.nullifierValue,
+    //     contractCallInputs.nullifierKey,
+    //     contractCallInputs.shadowBalanceRoot,
+    //     contractCallInputs.incomingBalanceRoot,
+    //     contractCallInputs.owner,
+    //     contractCallInputs.proof
+    // )
+}
+
+async function relayPublicTransferRequest(contractCallInputs) {
+    console.log({ contractCallInputs });
+    let proof = ethers.hexlify(contractCallInputs.proof);
+    // Format the request body according to the Rust server's expected structure
+    const requestBody = {
+        to: contractCallInputs.to,
+        value: BigInt(contractCallInputs.value).toString(),
+        nullifier_value: BigInt(contractCallInputs.nullifierValue).toString(),
+        nullifier_key: BigInt(contractCallInputs.nullifierKey).toString(),
+        shadow_balance_root: BigInt(contractCallInputs.shadowBalanceRoot).toString(),
+        incoming_balance_root: BigInt(contractCallInputs.incomingBalanceRoot).toString(),
+        owner: contractCallInputs.owner,
+        proof: proof.startsWith('0x') ? proof.slice(2) : proof
+    };
+
+    console.log({ requestBody })
+
+    try {
+        const response = await fetch('http://localhost:8000/public_transfer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Public transfer submitted successfully:', data);
+        return data;
+    } catch (error) {
+        console.error('Error sending public transfer:', error);
+        throw error;
+    }
 }

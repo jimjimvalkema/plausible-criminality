@@ -148,6 +148,7 @@ async fn main() -> Result<()> {
         .mount("/", routes![hello])
         .mount("/private_transfer", routes![private_transfer])
         .mount("/public_transfer", routes![public_transfer])
+        .configure(rocket::Config::figment().merge(("address", "0.0.0.0")))
         .launch()
         .await?;
 
