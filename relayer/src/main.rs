@@ -7,7 +7,13 @@ use alloy::{
     providers::{Provider, ProviderBuilder},
     signers::local::PrivateKeySigner,
 };
-use rocket::{post, routes, serde::json::Json, State};
+use rocket::{
+    fairing::{Fairing, Info, Kind},
+    http::{Header, Method},
+    post, routes,
+    serde::json::Json,
+    Request, Response, State,
+};
 use serde::{Deserialize, Serialize};
 #[macro_use]
 extern crate rocket;
@@ -19,6 +25,43 @@ use std::env;
 
 const CONTRACT_ABI_PATH: &str =
     "../ignition/deployments/chain-11155111/artifacts/UltraAnonModule#UltraAnon.json";
+
+// Create a CORS fairing
+pub struct CORS;
+
+#[rocket::async_trait]
+impl Fairing for CORS {
+    fn info(&self) -> Info {
+        Info {
+            name: "CORS Fairing",
+            kind: Kind::Response | Kind::Request,
+        }
+    }
+
+    async fn on_request(&self, request: &mut Request<'_>, _: &mut rocket::Data<'_>) {
+        // If it's an OPTIONS request, configure it to be immediately handled
+        if request.method() == Method::Options {
+            request.local_cache(|| true);
+        }
+    }
+
+    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Methods",
+            "POST, GET, OPTIONS",
+        ));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Headers",
+            "Content-Type, Authorization",
+        ));
+
+        // If it's an OPTIONS request, set the status to 200 OK
+        if request.method() == Method::Options {
+            response.set_status(rocket::http::Status::Ok);
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 struct PrivateTransactionRequest {
@@ -175,6 +218,7 @@ async fn main() -> Result<()> {
     };
 
     let _ = rocket::build()
+        .attach(CORS)
         .manage(app_state)
         .mount("/", routes![hello])
         .mount("/private_transfer", routes![private_transfer])

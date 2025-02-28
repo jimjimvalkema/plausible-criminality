@@ -115,7 +115,7 @@ async function makePrivateTransferNoirProof({ noirJsInputs }) {
     const backend = new UltraPlonkBackend(privateTransactionCircuit.bytecode, { threads: navigator.hardwareConcurrency });
     const { witness } = await noir.execute(noirJsInputs);
     const proof = await backend.generateProof(witness);
-    console.log({ proof })
+    // console.log({ proof })
     // const hexPublicInputs = proof.publicInputs.map(input => {
     //     // Convert each input to hex string and ensure it's 64 chars (32 bytes) with 0x prefix
     //     let hexValue = typeof input === 'bigint'
@@ -167,7 +167,7 @@ export async function privateTransfer({ amount, to, ultraAnonContract, secret, d
         proof: proof
     }
 
-    await sendPrivateTransferRequest(contractCallInputs)
+    await relayPrivateTransferRequest(contractCallInputs)
 
     // ultraAnonContract.privateTransfer(
     //     contractCallInputs.to,
@@ -180,7 +180,7 @@ export async function privateTransfer({ amount, to, ultraAnonContract, secret, d
     // )
 }
 
-async function sendPrivateTransferRequest(contractCallInputs) {
+async function relayPrivateTransferRequest(contractCallInputs) {
     console.log({ contractCallInputs });
     let proof = ethers.hexlify(contractCallInputs.proof);
     // Format the request body according to the Rust server's expected structure
