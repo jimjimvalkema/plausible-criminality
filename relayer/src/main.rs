@@ -121,6 +121,11 @@ struct AppState {
     private_key: String,
 }
 
+#[options("/<_..>")]
+fn all_options() {
+    // This is intentionally empty - the actual response is handled by the CORS fairing
+}
+
 #[rocket::main]
 async fn main() -> Result<()> {
     dotenv().ok();
@@ -145,7 +150,7 @@ async fn main() -> Result<()> {
     let _ = rocket::build()
         .attach(Cors)
         .manage(app_state)
-        .mount("/", routes![hello])
+        .mount("/", routes![hello, all_options])
         .mount("/private_transfer", routes![private_transfer])
         .mount("/public_transfer", routes![public_transfer])
         .configure(rocket::Config::figment().merge(("address", "0.0.0.0")))

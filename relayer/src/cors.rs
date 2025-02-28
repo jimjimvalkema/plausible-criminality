@@ -1,10 +1,9 @@
 use rocket::{
     fairing::{Fairing, Info, Kind},
-    http::{Header, Method},
+    http::{Header, Method, Status},
     Request, Response,
 };
 
-// Create a CORS fairing
 pub struct Cors;
 
 #[rocket::async_trait]
@@ -17,26 +16,27 @@ impl Fairing for Cors {
     }
 
     async fn on_request(&self, request: &mut Request<'_>, _: &mut rocket::Data<'_>) {
-        // If it's an OPTIONS request, configure it to be immediately handled
-        if request.method() == Method::Options {
-            request.local_cache(|| true);
-        }
+        // We don't need to do anything special here for OPTIONS requests
+        // The main handling will be in on_response
     }
 
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+        // Set CORS headers for all responses
         response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
         response.set_header(Header::new(
             "Access-Control-Allow-Methods",
-            "POST, GET, OPTIONS",
+            "POST, GET, PATCH, OPTIONS",
         ));
         response.set_header(Header::new(
             "Access-Control-Allow-Headers",
             "Content-Type, Authorization",
         ));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
 
-        // If it's an OPTIONS request, set the status to 200 OK
+        // For OPTIONS requests, we need to return 204 No Content
         if request.method() == Method::Options {
-            response.set_status(rocket::http::Status::Ok);
+            response.set_status(Status::NoContent);
         }
     }
 }
+
