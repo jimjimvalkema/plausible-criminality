@@ -101,7 +101,7 @@ async fn private_transfer(
     let call_builder = contract.function("privateTransfer", &args);
 
     if let Err(err) = call_builder {
-        let err = err.to_string();
+        let err = format!("call builder error: {}", err);
         return Json(TransactionResponse {
             success: false,
             txn_hash: None,
@@ -112,7 +112,7 @@ async fn private_transfer(
     let pending_txn_builder = call_builder.unwrap().send().await;
 
     if let Err(err) = pending_txn_builder {
-        let err = err.to_string();
+        let err = format!("pending transaction builder error: {}", err);
         return Json(TransactionResponse {
             success: false,
             txn_hash: None,
@@ -130,7 +130,7 @@ async fn private_transfer(
             })
         }
         Err(err) => {
-            let err = err.to_string();
+            let err = format!("transaction execution error: {}", err.to_string());
             Json(TransactionResponse {
                 success: false,
                 txn_hash: None,
