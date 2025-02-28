@@ -20,7 +20,7 @@ window.hashAddress = hashAddress
 window.hashNullifierKey =hashNullifierKey
 
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
-const ultraAnonAddress = "0x4C1F27c47a61085cE7894F7AeDa77193FF68cA21"//UltraAnonDeploymentArtifact.
+const ultraAnonAddress = "0xE60b3a62fFF29f04f643B538BF63145F281c769c"//UltraAnonDeploymentArtifact.
 const deploymentBlock = 7793115;
 window.deploymentBlock = deploymentBlock
 const CHAININFO = {
@@ -69,6 +69,7 @@ async function main() {
 }
 
 async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
+    ethers.assert(ethers.isAddress(to), "not an address or checksum failed")
     //sync tress
     const shadowBalanceTree = syncShadowTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
     const incomingBalanceTree = syncIncomingBalanceTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
