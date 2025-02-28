@@ -28,7 +28,7 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
  * applications.
  */
 
- // TODO make interface ModifiedERC20
+// TODO make interface ModifiedERC20
 abstract contract ModifiedERC20 is Context, IModifiedERC20, IERC20Errors {
     //mapping(address account => uint256) private _balances;
     mapping(address account => uint256) internal _balances; //needs to be accesible so we can directly update it on private transfer without creating a mint event
@@ -212,7 +212,6 @@ abstract contract ModifiedERC20 is Context, IModifiedERC20, IERC20Errors {
                 _balances[to] += value;
             }
         }
-
         emit Transfer(from, to, value);
     }
 

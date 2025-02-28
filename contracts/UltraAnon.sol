@@ -21,10 +21,10 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
     mapping(address => uint32) public merkleIndexOfAccount; // 0 == doesn't exist, realIndex = merkleIndexOfAccount[_address]-1
     // this because mapping will return 0 by default even if it was never set
 
-    mapping(uint256 => uint256) public nullifiers; // nullifierKey=>nullifierValue
+    mapping(address => uint256) public incomingBalance; // Increases on receiving private and public txns
 
-    // TODO
-    // mapping(address => uint256) public incomingBalance; // Increases on receiving private and public txns
+
+    mapping(uint256 => uint256) public nullifiers; // nullifierKey=>nullifierValue
 
     address public privateTransferVerifier;
     address public publicTransferVerifier;
@@ -159,6 +159,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
         // update the balance (cant use _transfer or _update since those need a from address )
         _balances[to] = _balances[to] + value;
         _updateIncomingBalanceTree(to, _balances[to] + value);
+        incomingBalance[to] += value;
 
         emit Transfer(address(0), to, value);
 
@@ -304,7 +305,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
                 _updateIncomingBalanceTree(to, newBalance);
             }
         }
-
+        incomingBalance[to] += value;
         emit Transfer(from, to, value);
     }
 }

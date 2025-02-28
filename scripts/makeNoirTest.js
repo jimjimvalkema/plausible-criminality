@@ -33,7 +33,7 @@ fn test_main() {
     let prev_shadow_balance_merkle_proof =  [${noirJsInputs.prev_shadow_balance_merkle_proof}];
     let incoming_balance_merkle_proof =     [${noirJsInputs.incoming_balance_merkle_proof}];
     let incoming_balance =                  ${noirJsInputs.incoming_balance};
-    let prev_nonce =                        ${noirJsInputs.prev_nonce};
+    let nonce =                        ${noirJsInputs.nonce};
     let prev_shadow_balance =               ${noirJsInputs.prev_shadow_balance};
     let prev_shadow_balance_index =         ${noirJsInputs.prev_shadow_balance_index};
     let incoming_balance_index =            ${noirJsInputs.incoming_balance_index};

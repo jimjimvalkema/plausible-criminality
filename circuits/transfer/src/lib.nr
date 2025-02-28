@@ -44,7 +44,7 @@ pub fn transfer(
     // incoming balance
     incoming_balance: Field,
     // num txns
-    prev_nonce: Field,
+    nonce: Field,
     // total amount privately sent
     prev_shadow_balance: Field,
     // position of the account from the array that holds the merkle roots
@@ -61,7 +61,7 @@ pub fn transfer(
     );
 
     // verify new nullifier key
-    let computed_nullifier_key = poseidon::bn254::hash_2([prev_nonce + 1, secret]);
+    let computed_nullifier_key = poseidon::bn254::hash_2([nonce, secret]);
     assert(
         computed_nullifier_key == nullifier_key,
         "nullifier key computed in circuit doesn't match nullifier key passed in as parameter",
@@ -70,7 +70,7 @@ pub fn transfer(
     // verify new nullifier value
     let computed_nullifier_value = poseidon::bn254::hash_3([
         prev_shadow_balance + transfer_amount,
-        prev_nonce + 1,
+        nonce,
         secret,
     ]);
     assert(
@@ -78,11 +78,11 @@ pub fn transfer(
         "nullifier value computed in circuit doesn't match nullifier value passed in as parameter",
     );
 
-    if prev_nonce != 0 {
+    if nonce != 0 {
         // compute previous nullifier key & value
-        let prev_nullifier_key = poseidon::bn254::hash_2([prev_nonce, secret]);
+        let prev_nullifier_key = poseidon::bn254::hash_2([nonce - 1, secret]);
         let prev_nullifier_value =
-            poseidon::bn254::hash_3([prev_shadow_balance, prev_nonce, secret]);
+            poseidon::bn254::hash_3([prev_shadow_balance, nonce - 1, secret]);
 
         // verify previous shadow balance tree root
         let prev_shadow_balance_leaf =
@@ -101,14 +101,25 @@ pub fn transfer(
 
     // verify incoming balance tree root
     let incoming_balance_leaf = poseidon::bn254::hash_2([sender_account, incoming_balance]);
+    println(f"sender_account: {sender_account}");
+    println(f"incoming_balance: {incoming_balance}");
+    println(f"incoming_balance: {incoming_balance_leaf}");
     let computed_incoming_balance_root = compute_merkle_root(
         incoming_balance_leaf,
         incoming_balance_index,
         incoming_balance_merkle_proof,
     );
+    println(f"computed_incoming_balance_leaf: {incoming_balance_leaf}");
+    println(f"incoming_balance_index: {incoming_balance_index}");
+
+    println(f"incoming_balance_root: {incoming_balance_root}");
+    println(
+        f"computed_incoming_balance_root: {computed_incoming_balance_root}",
+    );
+
     assert(
         computed_incoming_balance_root == incoming_balance_root,
-        "computed incoming balance tree root doesn't match shadow balance tree root passed in as parameter",
+        "computed incoming balance tree root doesn't match incoming balance tree root passed in as parameter",
     );
 
     // make sure user has enough funds to send
