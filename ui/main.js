@@ -1,28 +1,27 @@
-
+// node_modules
 import { ethers } from "ethers";
+import { poseidon1, poseidon2 } from "poseidon-lite";
+
+// abis, circuits
 import UltraAnonDeploymentArtifact from "../artifacts/contracts/UltraAnon.sol/UltraAnon.json" with { type: "json" }
+import privateTransactionCircuit from '../circuits/privateTransfer/target/privateTransfer.json'  with { type: "json" }; //assert {type: 'json'};
+import publicTransactionCircuit from '../circuits/publicTransfer/target/publicTransfer.json'  with { type: "json" }; //assert {type: 'json'};
+
+// local imports
 import { syncInComingBalanceTree as syncIncomingBalanceTree, syncShadowTree, syncShadowBalance } from "../scripts/syncMaxing.js"
 import { hashAddress, hashNullifierKey, hashNullifierValue, hashShadowBalanceTreeLeaf, hashIncomingBalanceTreeLeaf } from "../scripts/hashor.js"
+import { makeNoirTest } from "../scripts/makeNoirTest.js"
 
-import { poseidon1, poseidon2 } from "poseidon-lite";
-import privateTransactionCircuit from '../circuits/privateTransfer/target/privateTransfer.json'  with { type: "json" }; //assert {type: 'json'};
-// import os from 'os';
+
+// noir
 import { Noir } from "@noir-lang/noir_js";
 import { UltraPlonkBackend } from '@aztec/bb.js';
-import { makeNoirTest } from "../scripts/makeNoirTest.js"
-window.poseidon1 = poseidon1
-window.poseidon2 = poseidon2
-window.syncInComingBalanceTree = syncIncomingBalanceTree
-window.syncShadowTree = syncShadowTree
-window.syncShadowBalance = syncShadowBalance
 
-window.hashAddress = hashAddress
-window.hashNullifierKey =hashNullifierKey
 
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
-const ultraAnonAddress = "0xE60b3a62fFF29f04f643B538BF63145F281c769c"//UltraAnonDeploymentArtifact.
+const ultraAnonAddress = "0xE60b3a62fFF29f04f643B538BF63145F281c769c"
 const deploymentBlock = 7793115;
-window.deploymentBlock = deploymentBlock
+
 const CHAININFO = {
     chainId: "0xaa36a7",
     rpcUrls: ["https://1rpc.io/sepolia"],
@@ -55,17 +54,32 @@ async function switchNetwork(network, provider) {
     }
 }
 
-async function main() {
-    const provider = new ethers.BrowserProvider(window.ethereum)
-    await switchNetwork(CHAININFO, provider)
-    const signer = await provider.getSigner();
-    const ultraAnonContract = new ethers.Contract(ultraAnonAddress, ultraAnonAbi, signer)
+async function generateShadowBalanceMerkleProof({currentShadowNonce, secret, prevShadowBalance, shadowBalanceTree}) {
+    let merkleProof;
+    let leafIndex;
+    if (currentShadowNonce != 0n) { // its not our first tx. so we proof like normal
+        const prevNullifierValue = hashNullifierValue({ nonce: BigInt(currentShadowNonce)-1n, secret: secret, balance: BigInt(prevShadowBalance) });
+        const prevNullifierKey = hashNullifierKey({ nonce: (BigInt(currentShadowNonce) -1n ), secret: secret });
+        
+        // leafs
+        const prevShadowBalanceTreeLeaf = hashShadowBalanceTreeLeaf(prevNullifierKey, prevNullifierValue );
+        const shadowBalanceTreeLeafIndex = shadowBalanceTree.elements.indexOf(ethers.zeroPadValue(ethers.toBeHex(prevShadowBalanceTreeLeaf),32));
+        const shadowBalanceTreeMerkleProof = shadowBalanceTree.path(Number(shadowBalanceTreeLeafIndex)).pathElements
+        merkleProof = shadowBalanceTreeMerkleProof
+        leafIndex = BigInt(shadowBalanceTreeLeafIndex)
+    } else {
+        const emptyShadowBalanceTreeMerkleProof = Array(31).fill("0x0000000000000000000000000000000000000000000000000000000000000000");
+        merkleProof =  emptyShadowBalanceTreeMerkleProof
+        leafIndex = 0n 
+    }
+    return {merkleProof, leafIndex}
+}
 
-    //debug shite
-    window.ethers = ethers
-    window.ultraAnonContract = ultraAnonContract
-    window.provider = provider
-    window.signer = signer
+async function generateIncomingBalanceMerkleProof({incomingBalanceTree, ultraAnonContract, ultraAnonSenderAddress}) {
+    const incomingBalanceTreeLeafIndex = await ultraAnonContract.merkleIndexOfAccount(ultraAnonSenderAddress) - 1n; // -1n because i set up mapping to add 1 because mappings return 0 by default. So 0=doesn't exist, realIndex=index-1n 
+    console.log({incomingBalanceTreeLeafIndex})
+    const incomingBalanceTreeMerkleProof = incomingBalanceTree.path(Number(incomingBalanceTreeLeafIndex)).pathElements;
+    return {merkleProof: incomingBalanceTreeMerkleProof, leafIndex: BigInt(incomingBalanceTreeLeafIndex)}
 }
 
 async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
@@ -75,49 +89,27 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
     const incomingBalanceTree = syncIncomingBalanceTree({ contract: ultraAnonContract, startBlock: deploymentBlock })
 
     // sync shadow balance
-    const { nextNonce: nextShadowNonce, shadowBalance:prevShadowBalance } = await syncShadowBalance({ contract: ultraAnonContract, startBlock: deploymentBlock, secret: secret });
+    const { currentNonce: currentShadowNonce, shadowBalance:prevShadowBalance } = await syncShadowBalance({ contract: ultraAnonContract, startBlock: deploymentBlock, secret: secret });
 
-    // hashing
+    // hashing current nullifier
     const ultraAnonSenderAddress = hashAddress(secret)
-    const nullifierValue = hashNullifierValue({ nonce: BigInt(nextShadowNonce) , secret: secret, balance: BigInt(prevShadowBalance) + amount });
-    const nullifierKey = hashNullifierKey({ nonce: (BigInt(nextShadowNonce) ), secret: secret });
+    const nullifierValue = hashNullifierValue({ nonce: BigInt(currentShadowNonce) , secret: secret, balance: BigInt(prevShadowBalance) + amount });
+    const nullifierKey = hashNullifierKey({ nonce: (BigInt(currentShadowNonce) ), secret: secret });
     
-    console.log({prevShadowBalance})
-    const prevNullifierValue = hashNullifierValue({ nonce: BigInt(nextShadowNonce)-1n, secret: secret, balance: BigInt(prevShadowBalance) });
-    const prevNullifierKey = hashNullifierKey({ nonce: (BigInt(nextShadowNonce) -1n ), secret: secret });
-    
-    // leafs
-    const prevShadowBalanceTreeLeaf = hashShadowBalanceTreeLeaf(prevNullifierKey, prevNullifierValue );
-    console.log({prevShadowBalanceTreeLeaf})
+    const {merkleProof:shadowBalanceTreeMerkleProof, leafIndex:shadowBalanceTreeLeafIndex} = await generateShadowBalanceMerkleProof({
+        currentShadowNonce: currentShadowNonce, 
+        secret: secret, 
+        prevShadowBalance: prevShadowBalance, 
+        shadowBalanceTree: await shadowBalanceTree
+    }) 
 
-
-
-    // shadow balance proof
-    let shadowBalanceTreeLeafIndex = (await shadowBalanceTree).elements.indexOf(ethers.zeroPadValue(ethers.toBeHex(prevShadowBalanceTreeLeaf),32));
-    console.log({shadowBalanceTreeLeafIndex})
-    // for base case where there are no leaves in the tree yet
-    const defaultShadowBalanceTreeMerkleProof = Array(31).fill("0x0000000000000000000000000000000000000000000000000000000000000000");
-    // use default if merkle proof if leaf isn't in tree
-    let shadowBalanceTreeMerkleProof;
-    if (shadowBalanceTreeLeafIndex >= 0) {
-        shadowBalanceTreeMerkleProof = (await shadowBalanceTree)?.path?.(Number(shadowBalanceTreeLeafIndex))?.pathElements ?? defaultShadowBalanceTreeMerkleProof;
-    } else {
-        shadowBalanceTreeMerkleProof = defaultShadowBalanceTreeMerkleProof;
-        // can't pass a negative number into noirJs
-        shadowBalanceTreeLeafIndex = 0;
-    }
-
-
-
-    // incoming balance proof
-    const incomingBalanceTreeLeafIndex = await ultraAnonContract.merkleIndexOfAccount(ultraAnonSenderAddress) - 1n;
-    const incomingBalanceTreeMerkleProof = (await incomingBalanceTree).path(Number(incomingBalanceTreeLeafIndex)).pathElements;
-    const incomingBalanceTreeRootJs = (await incomingBalanceTree).root
-    console.log({incomingBalanceTreeRootJs})
-    console.log({incomingBalanceTreeMerkleProof})
+    const {merkleProof: incomingBalanceTreeMerkleProof,leafIndex:incomingBalanceTreeLeafIndex } = await generateIncomingBalanceMerkleProof({
+        incomingBalanceTree: await incomingBalanceTree, 
+        ultraAnonContract: ultraAnonContract,
+        ultraAnonSenderAddress: ultraAnonSenderAddress
+    })
 
     const incomingBalance = await ultraAnonContract.incomingBalance(ultraAnonSenderAddress);
-    console.log({incomingBalance})
 
     const noirJsInputs = {
         transfer_amount: ethers.toBeHex(amount),
@@ -139,7 +131,7 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
         incoming_balance: ethers.toBeHex(incomingBalance),
 
         
-        nonce: ethers.toBeHex(nextShadowNonce),
+        nonce: ethers.toBeHex(currentShadowNonce),
         prev_shadow_balance: ethers.toBeHex(prevShadowBalance),
         prev_shadow_balance_index: ethers.toBeHex(shadowBalanceTreeLeafIndex),
         incoming_balance_index: ethers.toBeHex(incomingBalanceTreeLeafIndex),
@@ -159,7 +151,6 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
         proof: proof
     }
 
-    console.log({ contractCallInputs })
     ultraAnonContract.privateTransfer(
         contractCallInputs.to,
         contractCallInputs.value,
@@ -172,16 +163,11 @@ async function makePrivateTransfer({ amount, to, ultraAnonContract, secret }) {
 }
 window.makePrivateTransfer = makePrivateTransfer
 
-
-
-await main()
-
-async function makePrivateTransferNoirProof({
-    noirJsInputs
-}) {
+async function makePrivateTransferNoirProof({noirJsInputs}) {
     window.noirJsInputs = noirJsInputs
-    console.log({ noirJsInputs })
     console.log(makeNoirTest({ noirJsInputs }))
+
+
     const noir = new Noir(privateTransactionCircuit);
 
     // TODO: make this actually use dynamic number of cpus
@@ -208,3 +194,27 @@ async function makePrivateTransferNoirProof({
 
     return hexProof
 }
+
+
+async function main() {
+    const provider = new ethers.BrowserProvider(window.ethereum)
+    await switchNetwork(CHAININFO, provider)
+    const signer = await provider.getSigner();
+    const ultraAnonContract = new ethers.Contract(ultraAnonAddress, ultraAnonAbi, signer)
+
+    //debug shite
+    window.ethers = ethers
+    window.ultraAnonContract = ultraAnonContract
+    window.provider = provider
+    window.signer = signer
+    window.poseidon1 = poseidon1
+    window.poseidon2 = poseidon2
+    window.syncInComingBalanceTree = syncIncomingBalanceTree
+    window.syncShadowTree = syncShadowTree
+    window.syncShadowBalance = syncShadowBalance
+    window.hashAddress = hashAddress
+    window.hashNullifierKey =hashNullifierKey
+}
+
+await main()
+

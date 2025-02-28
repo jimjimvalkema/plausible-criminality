@@ -90,7 +90,6 @@ export async function syncShadowTree({contract, startBlock, eventScanChunksize=5
 }
 
 export async function syncShadowBalance({contract, startBlock, secret, noncesPerScan=20,chunksize=5000  }) {
-    console.log({contract, startBlock, secret, noncesPerScan,chunksize  })
     let lastNullifierFound;
     let isLastNullifierFound = false
     let lastNonceFound = 0n
@@ -122,7 +121,7 @@ export async function syncShadowBalance({contract, startBlock, secret, noncesPer
     const nextNonce = allNullifierKeysAndAmounts.flat().length === 0 ? 0n : lastNullifierFound.nonce + 1n
     console.log({allNullifierKeysAndAmounts:allNullifierKeysAndAmounts.flat()})
     const totalShadowBalance = allNullifierKeysAndAmounts.flat().reduce((total,nullifierKey)=>total += nullifierKey.amountSent, 0n)
-    return {nextNonce: nextNonce, shadowBalance: totalShadowBalance}
+    return {currentNonce: nextNonce, shadowBalance: totalShadowBalance}
     
 }
 
