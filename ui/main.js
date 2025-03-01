@@ -21,19 +21,19 @@ import { UltraPlonkBackend } from '@aztec/bb.js';
 
 
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
-const ultraAnonAddress = "0xb200d5d4eaA13670553d6f0A66eE79E7F858C637"
+const ultraAnonAddress = "0x6650F12e7e71F8F29454596B8E54014EA2c68286"
 const deploymentBlock = 7808380;
 
 const CHAININFO = {
-    chainId: "0xaa36a7",
-    rpcUrls: ["https://1rpc.io/sepolia"],
+    chainId: "0x0ba5ed",
+    rpcUrls: ["https://rpc-gel-sepolia.inkonchain.com/"],
     chainName: "Sepolia",
     nativeCurrency: {
         name: "ethereum",
         symbol: "ETH",
         decimals: 18
     },
-    blockExplorerUrls: ["https://sepolia.etherscan.io/"]
+    blockExplorerUrls: ["https://explorer-sepolia.inkonchain.com//"]
 }
 
 

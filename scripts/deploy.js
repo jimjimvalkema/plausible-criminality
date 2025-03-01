@@ -64,12 +64,12 @@ async function main() {
 
     //verify (source: https://hardhat.org/hardhat-runner/plugins/nomiclabs-hardhat-etherscan#using-programmatically)
     //TODO check that it actually verifies since the contract is already deployed on sepolia
-    const PoseidonT3Verification = hre.run("verify:verify", {
-        address: PoseidonT3Address,
-        //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
-        constructorArguments: [],
-        value: 0n
-    });
+    // const PoseidonT3Verification = hre.run("verify:verify", {
+    //     address: PoseidonT3Address,
+    //     //contract: "contracts/MyContract.sol:MyContract", //Filename.sol:ClassName
+    //     constructorArguments: [],
+    //     value: 0n
+    // });
 
     // const UltraVerifierVerification =  hre.run("verify:verify", {
     //     address: UltraVerifier.target,
@@ -101,7 +101,7 @@ async function main() {
         value: 0n
     });
 
-    await Promise.all([PoseidonT3Verification, UltraAnonVerification, privateTransferVerifierVerification, publicTransferVerifierVerification])
+    await Promise.all([UltraAnonVerification, privateTransferVerifierVerification, publicTransferVerifierVerification])
 
 
 

@@ -14,7 +14,7 @@ import os from "os"
 
 const CONTRACT_ADDRESS = "0x965072C3516a7B9BC643094B3f4eC73E7Ac130Fc"
 
-const PROVIDERURL = "https://1rpc.io/sepolia"
+const PROVIDERURL = "https://rpc-gel-sepolia.inkonchain.com/"
 const provider = new ethers.JsonRpcProvider(PROVIDERURL)
 
 const PRIVATE_KEY = vars.get("PRIVATE_KEY");

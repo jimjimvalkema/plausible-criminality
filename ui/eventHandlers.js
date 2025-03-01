@@ -172,8 +172,8 @@ function updateTxList({txsUl, address, txType,contractAddress}) {
         if (txs && txs.length) {
             for (const tx of txs) {
                 const a = document.createElement("a")
-                a.href = `https://sepolia.etherscan.io/tx/${tx}`
-                a.innerText = `https://sepolia.etherscan.io/tx/${tx.slice(0,10) +"..."+ tx.slice(tx.length-10,tx.length)}`
+                a.href = `https://explorer-sepolia.inkonchain.com//tx/${tx}`
+                a.innerText = `https://explorer-sepolia.inkonchain.com//tx/${tx.slice(0,10) +"..."+ tx.slice(tx.length-10,tx.length)}`
                 
                 const li = document.createElement("li")
                 li.classList.add("txs")
@@ -198,7 +198,7 @@ async function newTx({txhash, address, contractAddress,txType,txsUl}) {
 
     }
     
-    messageUi(`confirmed tx: https://sepolia.etherscan.io/tx/0x${txhash}`)
+    messageUi(`confirmed tx: https://explorer-sepolia.inkonchain.com//tx/0x${txhash}`)
     
 }
 
