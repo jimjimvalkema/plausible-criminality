@@ -158,8 +158,10 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
 
         // update the balance (cant use _transfer or _update since those need a from address )
         _balances[to] = _balances[to] + value;
-        _updateIncomingBalanceTree(to, _balances[to]);
-        incomingBalance[to] += value;
+        uint256 newIncomingBalance = incomingBalance[to] + value;
+        incomingBalance[to] = newIncomingBalance;
+        _updateIncomingBalanceTree(to, newIncomingBalance);
+
 
         emit Transfer(address(0), to, value);
 
@@ -298,8 +300,9 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
                 // Overflow not possible: balance + value is at most totalSupply, which we know fits into a uint256.
                 uint256 newBalance = _balances[to] + value;
                 _balances[to] = newBalance;
-                incomingBalance[to] += value;
-                _updateIncomingBalanceTree(to, incomingBalance[to]);
+                uint256 newIncomingBalance = incomingBalance[to] + value;
+                incomingBalance[to] = newIncomingBalance;
+                _updateIncomingBalanceTree(to, newIncomingBalance);
 
             }
         }

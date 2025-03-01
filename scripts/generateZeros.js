@@ -20,6 +20,6 @@ function formatSolidity(levels) {
 const hashFunction = (left, right) => poseidon2([left, right])
 const leaves = []
 const tree = new MerkleTree(MERKLETREEDEPTH, leaves, { hashFunction, zeroElement: ZERO })
-const levels = tree.zeros.map((level)=>ethers.toBeHex(level))
+const levels = tree.zeros.map((level)=>ethers.zeroPadValue(ethers.toBeHex(level)))
 await fs.writeFile(`${import.meta.dirname}/out/levels.sol.txt`, formatSolidity(levels))
 await fs.writeFile(`${import.meta.dirname}/out/levels.json`, JSON.stringify(levels))

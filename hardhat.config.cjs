@@ -16,7 +16,7 @@ module.exports = {
   },
   networks: {
     sepolia: {
-      url: "https://1rpc.io/sepolia",
+      url: "https://sepolia.infura.io/v3/2LPfLOYBTHSHfLWYSv8xib2Y7OA",
       accounts: [PRIVATE_KEY],
       chainId: 11155111,
       ethNetwork: "sepolia",

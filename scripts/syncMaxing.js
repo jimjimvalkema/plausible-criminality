@@ -9,7 +9,7 @@ const FIELD_SIZE = 2188824287183927522224640574525727508854836440041603434369820
 const MERKLETREEDEPTH = 31
 const ZERO = ethers.toBeHex(BigInt(ethers.keccak256(new TextEncoder().encode("tornado"))) % FIELD_SIZE) //tornadocash wow so cool edgy!!!
 //const HASH_FUNCTION = (left, right) => ethers.toBeHex(poseidon2([ethers.toBigInt(left), ethers.toBigInt(right)]))
-const HASH_FUNCTION = (left, right) => ethers.toBeHex(poseidon2([BigInt(left), BigInt(right)]))
+const HASH_FUNCTION = (left, right) => ethers.zeroPadValue(ethers.toBeHex(poseidon2([BigInt(left), BigInt(right)])),32)
 
 
 
@@ -75,8 +75,9 @@ export async function syncInComingBalanceTree({contract, startBlock, eventScanCh
     }
 
     // we only want the hashes now
-    const leavesOnlyHashes = currentLeaves.map((leaf)=>ethers.toBeHex(leaf.leafHash));
+    const leavesOnlyHashes = currentLeaves.map((leaf)=>ethers.zeroPadValue(ethers.toBeHex(leaf.leafHash),32));
     const tree = new MerkleTree(MERKLETREEDEPTH, leavesOnlyHashes, { hashFunction: HASH_FUNCTION, zeroElement: ZERO })
+    window.tree=tree
     return tree
 }
 
@@ -84,7 +85,7 @@ export async function syncShadowTree({contract, startBlock, eventScanChunksize=5
     //event scannoooor
     const leaves = await getLeaves({contract, startBlock, eventName:"ShadowNewLeaf", chunksize:eventScanChunksize}) 
     // we only want the hashes now
-    const leavesOnlyHashes = leaves.map((leaf)=>ethers.toBeHex(leaf.leafHash));
+    const leavesOnlyHashes = leaves.map((leaf)=>ethers.zeroPadValue(ethers.toBeHex(leaf.leafHash),32));
     const tree = new MerkleTree(MERKLETREEDEPTH, leavesOnlyHashes, { hashFunction: HASH_FUNCTION, zeroElement: ZERO })
     return tree
 }
@@ -119,7 +120,6 @@ export async function syncShadowBalance({contract, startBlock, secret, noncesPer
     }
     //[1,2,3,4,5].reduce((total, val) => total + val,0);
     const nextNonce = allNullifierKeysAndAmounts.flat().length === 0 ? 0n : lastNullifierFound.nonce + 1n
-    console.log({allNullifierKeysAndAmounts:allNullifierKeysAndAmounts.flat()})
     const totalShadowBalance = allNullifierKeysAndAmounts.flat().reduce((total,nullifierKey)=>total += nullifierKey.amountSent, 0n)
     return {currentNonce: nextNonce, shadowBalance: totalShadowBalance}
     

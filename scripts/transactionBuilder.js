@@ -27,8 +27,10 @@ async function generateShadowBalanceMerkleProof({ currentShadowNonce, secret, pr
 
         // leafs
         const prevShadowBalanceTreeLeaf = hashShadowBalanceTreeLeaf(prevNullifierKey, prevNullifierValue);
+
         const shadowBalanceTreeLeafIndex = shadowBalanceTree.elements.indexOf(ethers.zeroPadValue(ethers.toBeHex(prevShadowBalanceTreeLeaf), 32));
         const shadowBalanceTreeMerkleProof = shadowBalanceTree.path(Number(shadowBalanceTreeLeafIndex)).pathElements
+
         merkleProof = shadowBalanceTreeMerkleProof
         leafIndex = BigInt(shadowBalanceTreeLeafIndex)
     } else {
@@ -41,8 +43,11 @@ async function generateShadowBalanceMerkleProof({ currentShadowNonce, secret, pr
 
 async function generateIncomingBalanceMerkleProof({ incomingBalanceTree, ultraAnonContract, ultraAnonSenderAddress }) {
     const incomingBalanceTreeLeafIndex = await ultraAnonContract.merkleIndexOfAccount(ultraAnonSenderAddress) - 1n; // -1n because i set up mapping to add 1 because mappings return 0 by default. So 0=doesn't exist, realIndex=index-1n 
-    console.log({ incomingBalanceTreeLeafIndex })
     const incomingBalanceTreeMerkleProof = incomingBalanceTree.path(Number(incomingBalanceTreeLeafIndex)).pathElements;
+    console.log({incomingBalanceTreeLeafIndex})
+    const leafFromJsTree = incomingBalanceTree.elements[Number(incomingBalanceTreeLeafIndex)]
+    window.incomingBalanceTree =  incomingBalanceTree
+    console.log({leafFromJsTree})
     return { merkleProof: incomingBalanceTreeMerkleProof, leafIndex: BigInt(incomingBalanceTreeLeafIndex) }
 }
 
@@ -75,6 +80,8 @@ async function generateProofInputs({ amount, to, ultraAnonContract, secret, depl
     })
 
     const incomingBalance = await ultraAnonContract.incomingBalance(ultraAnonSenderAddress);
+    const leafHashedJs = poseidon2([ultraAnonSenderAddress,incomingBalance])
+    console.log({leafHashedJs})
     const noirJsInputs = {
         transfer_amount: ethers.toBeHex(amount),
 
@@ -168,7 +175,8 @@ export async function privateTransfer({ amount, to, ultraAnonContract, secret, d
     }
 
 
-    await relayPrivateTransferRequest(contractCallInputs)
+    const tx = await relayPrivateTransferRequest(contractCallInputs)
+    return tx
 
     // ultraAnonContract.privateTransfer(
     //     contractCallInputs.to,
@@ -195,7 +203,6 @@ async function relayPrivateTransferRequest(contractCallInputs) {
         proof: proof.startsWith('0x') ? proof.slice(2) : proof
     };
 
-    console.log({ requestBody })
 
     try {
         const response = await fetch('http://164.92.84.12:8000/private_transfer', {
@@ -249,7 +256,8 @@ export async function publicTransfer({ amount, to, ultraAnonContract, secret, de
 
     console.log({ contractCallInputs })
 
-    await relayPublicTransferRequest(contractCallInputs)
+    const tx = await relayPublicTransferRequest(contractCallInputs)
+    return tx
     // ultraAnonContract.publicTransfer(
     //     contractCallInputs.to,
     //     contractCallInputs.value,

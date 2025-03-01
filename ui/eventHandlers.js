@@ -130,14 +130,17 @@ async function accountSelectorHandler({event, accountSelectorEl, ultraAnonContra
 }
 
 async function updateBalances({secret, ultraAnonContract, deploymentBlock }) {
-    const address = ethers.toBeHex(hashAddress(secret))
+    const address = ethers.zeroPadValue(ethers.toBeHex(hashAddress(secret)),20)
     const balance =  ultraAnonContract.balanceOf(address)
+    const incomingBalance = ultraAnonContract.incomingBalance(address)
     const { currentNonce: currentShadowNonce, shadowBalance:prevShadowBalance } = await syncShadowBalance({ contract: ultraAnonContract, startBlock: deploymentBlock, secret: secret }); 
     const ticker =  ultraAnonContract.symbol()
-    const actualBalance = (await balance) - prevShadowBalance
+    const actualBalance = (await incomingBalance) - prevShadowBalance
     setClass({className: "publiclyKnowBalance", value:ethers.formatUnits(await balance,18)})
     setClass({className: "actualBalance", value:ethers.formatUnits(actualBalance,18)})
     setClass({className: "ticker", value:await ticker})
+
+
     
 }
 
@@ -153,13 +156,13 @@ async function transferPubliclyHandler({accountSelectorEl, recipientAddressInput
 
     messageUi("creating proof")
     const tx = await publicTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
-    await newTx(tx)
+    await newTx(tx.txn_hash)
     updateBalances({secret, ultraAnonContract, deploymentBlock })
 }
 
 async function newTx(tx) {
-    messageUi(`submitted tx: ${await tx.hash}`)
-    messageUi(`confirmed tx: ${(await tx.wait(1)).hash}`)
+    //messageUi(`submitted tx: ${await tx.hash}`)
+    messageUi(`confirmed tx: https://sepolia.etherscan.io/tx/0x${tx}`)
     //TODO add tx to localstorage
     //refresh txs
 }
@@ -171,8 +174,6 @@ async function transferPrivatelyHandler({accountSelectorEl, recipientAddressInpu
 
     messageUi("creating proof")
     const tx = await privateTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
-    window.tx= tx
-    console.log({tx})
-    await newTx(tx)
+    await newTx(tx.txn_hash)
     updateBalances({secret, ultraAnonContract, deploymentBlock })
 }

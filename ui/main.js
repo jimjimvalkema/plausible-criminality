@@ -21,8 +21,8 @@ import { UltraPlonkBackend } from '@aztec/bb.js';
 
 
 const ultraAnonAbi = UltraAnonDeploymentArtifact.abi
-const ultraAnonAddress = "0xE60b3a62fFF29f04f643B538BF63145F281c769c"
-const deploymentBlock = 7793115;
+const ultraAnonAddress = "0xb200d5d4eaA13670553d6f0A66eE79E7F858C637"
+const deploymentBlock = 7808380;
 
 const CHAININFO = {
     chainId: "0xaa36a7",

@@ -18,7 +18,7 @@ noirup -v 1.0.0-beta.2
 
 
 generate verifier contracts
-//this should be a bash script lmao
+<!-- //this should be a bash script lmao -->
 ```shell
 # private transfer
 cd circuits/privateTransfer/; 
@@ -46,6 +46,7 @@ node scripts/replaceLine.js --file contracts/PublicTransferVerifier.sol --remove
 
 deploy
 ```shell
+rm -fr ignition/deployments;
 yarn hardhat run scripts/deploy.js --network sepolia;
 ```
 
@@ -60,4 +61,4 @@ yarn hardhat run test/contractinteractionTest.js
 ``` -->
 
 
-UltraAnon on sepolia: https://sepolia.etherscan.io/address/0xE60b3a62fFF29f04f643B538BF63145F281c769c#code
+UltraAnon on sepolia: http://sepolia.etherscan.io/address/0xF3e983aF390add9794238546328658E0CB58d337
