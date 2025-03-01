@@ -4,9 +4,22 @@ import { hashAddress, getSafeRandomNumber } from "../scripts/hashor"
 import {syncShadowBalance} from "../scripts/syncMaxing"
 import { privateTransfer, publicTransfer } from "../scripts/transactionBuilder"
 
+async function mintTokensHandler({ultraAnonContract, secret, deploymentBlock}) {
+    console.log({secret})
+    const address = hashAddress(secret) 
+    const tx = await ultraAnonContract.mint(address,ethers.parseUnits("100", 18))
+
+    await newTx({txhash:tx.hash,address,contractAddress:ultraAnonContract.target,txType:"mint"})
+    await tx.wait(1)
+    updateBalances({secret, ultraAnonContract, deploymentBlock})
+
+}
+
 export function setEventHandlers({ultraAnonContract, deploymentBlock}) {
     const pubTxsUl = document.getElementById("allPublicTransfersUl")
     const privTxsUl = document.getElementById("allPrivateTransfersUl")
+
+    const mintToken = document.getElementById("mintToken")
 
 
     const contractAddress = ultraAnonContract.target
@@ -36,6 +49,7 @@ export function setEventHandlers({ultraAnonContract, deploymentBlock}) {
     
     importPrivateKeyBtn.addEventListener("click", async ()=>addNewAccount({secret:importPrivateKeyInput.value,contractAddress, accountSelectorEl}))
 
+    mintToken.addEventListener("click",async ()=>mintTokensHandler({ultraAnonContract, secret:accountSelectorEl.value, deploymentBlock}))
     updateAccountSelector({accountSelectorEl, contractAddress: contractAddress})
 
 }
@@ -159,35 +173,33 @@ function updateTxList({txsUl, address, txType,contractAddress}) {
             for (const tx of txs) {
                 const a = document.createElement("a")
                 a.href = `https://sepolia.etherscan.io/tx/${tx}`
-                a.innerText = `https://sepolia.etherscan.io/tx/${tx}`
+                a.innerText = `https://sepolia.etherscan.io/tx/${tx.slice(0,10) +"..."+ tx.slice(tx.length-10,tx.length)}`
+                
                 const li = document.createElement("li")
+                li.classList.add("txs")
                 li.appendChild(a)
                 txsUl.appendChild(li)
             }
      
         }
     }
-
-
-
 }
 
 
 async function newTx({txhash, address, contractAddress,txType,txsUl}) {
     const allSecrets = JSON.parse(localStorage.getItem(contractAddress))
-    if("txs" in allSecrets[address] === false) {
-        allSecrets[address].txs = {"private":[], "public":[]}
-        console.log("neger")
+    if (txType !== "mint") {
+        if("txs" in allSecrets[address] === false) {
+            allSecrets[address].txs = {"private":[], "public":[], "mint":[]}
+        }
+        allSecrets[address].txs[txType].push(txhash)
+        localStorage.setItem(contractAddress, JSON.stringify(allSecrets))
+        updateTxList({txsUl,address,txType, contractAddress})
+
     }
-    console.log({allSecrets, txType})
-    allSecrets[address].txs[txType].push(txhash)
-    localStorage.setItem(contractAddress, JSON.stringify(allSecrets))
-    //messageUi(`submitted tx: ${await tx.hash}`)
+    
     messageUi(`confirmed tx: https://sepolia.etherscan.io/tx/0x${txhash}`)
-    //TODO add tx to localstorage
-    //refresh txs
-    console.log({txsUl,address,txType, contractAddress})
-    updateTxList({txsUl,address,txType, contractAddress})
+    
 }
 
 
