@@ -166,7 +166,7 @@ export async function privateTransfer({ amount, to, ultraAnonContract, secret, d
         proof: proof
     }
 
-    ultraAnonContract.privateTransfer(
+    const tx = ultraAnonContract.privateTransfer(
         contractCallInputs.to,
         contractCallInputs.value,
         contractCallInputs.nullifierValue,
@@ -175,6 +175,7 @@ export async function privateTransfer({ amount, to, ultraAnonContract, secret, d
         contractCallInputs.incomingBalanceRoot,
         contractCallInputs.proof
     )
+    return tx
 }
 
 
@@ -205,7 +206,7 @@ export async function publicTransfer({ amount, to, ultraAnonContract, secret, de
     }
     console.log({contractCallInputs})
 
-    ultraAnonContract.publicTransfer(
+    const tx = await ultraAnonContract.publicTransfer(
         contractCallInputs.to,
         contractCallInputs.value,
         contractCallInputs.nullifierValue,
@@ -215,4 +216,5 @@ export async function publicTransfer({ amount, to, ultraAnonContract, secret, de
         contractCallInputs.owner,
         contractCallInputs.proof
     )
+    return tx
 }

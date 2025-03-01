@@ -2,19 +2,44 @@ import { ethers } from "ethers"
 
 import { hashAddress, getSafeRandomNumber } from "../scripts/hashor"
 import {syncShadowBalance} from "../scripts/syncMaxing"
+import { privateTransfer, publicTransfer } from "../scripts/transactionBuilder"
 
 export function setEventHandlers({ultraAnonContract, deploymentBlock}) {
     const contractAddress = ultraAnonContract.target
 
+    const copyAddressBtn = document.getElementById("copyAddressBtn")
+    const copyPrivatekeyBtn = document.getElementById("copyPrivatekeyBtn")
+
     const accountSelectorEl = document.getElementById("accountSelector")
     const generateAddressBtn = document.getElementById("generateNewAddress")
-    
+    const privateTransferBtn = document.getElementById("privateTransferBtn")
+    const publicTransferBtn = document.getElementById("publicTransferBtn")
+
+    const recipientAddressInput = document.getElementById("recipientAddressInput")
+    const amountInput = document.getElementById("amountInput")
+
+    copyAddressBtn.addEventListener("click", async ()=> copyAddressBtnHandler({accountSelectorEl}))
+    copyPrivatekeyBtn.addEventListener("click", async ()=> copySecretBtnHandler({accountSelectorEl}))
 
     generateAddressBtn.addEventListener("click", async ()=>generateAddressHandler({ultraAnonContract, accountSelectorEl}))
     accountSelectorEl.addEventListener("change",async (event)=>accountSelectorHandler({event, accountSelectorEl, ultraAnonContract, deploymentBlock}))
     
+    publicTransferBtn.addEventListener("click", async ()=>transferPubliclyHandler({accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
+    privateTransferBtn.addEventListener("click", async ()=>transferPrivatelyHandler({accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
+
     updateAccountSelector({accountSelectorEl, contractAddress: contractAddress})
 
+}
+
+function copyAddressBtnHandler({accountSelectorEl}) {
+    const secret = accountSelectorEl.value
+    const address = hashAddress(secret)
+    navigator.clipboard.writeText(address);
+}
+
+function copySecretBtnHandler({accountSelectorEl}) {
+    const secret = accountSelectorEl.value
+    navigator.clipboard.writeText(secret);
 }
 
 
@@ -102,4 +127,24 @@ async function updateBalances({secret, ultraAnonContract, deploymentBlock }) {
 async function updateTxList() {
 
 
+}
+
+async function transferPubliclyHandler({accountSelectorEl, recipientAddressInput, amountInput,ultraAnonContract, deploymentBlock}) {
+    const amount = ethers.parseUnits(amountInput.value, 18)
+    const to = ethers.getAddress(recipientAddressInput.value)
+    const secret = accountSelectorEl.value  
+
+    const tx = await publicTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
+    await tx.wait(1)
+    updateBalances({secret, ultraAnonContract, deploymentBlock })
+}
+
+async function transferPrivatelyHandler({accountSelectorEl, recipientAddressInput, amountInput,ultraAnonContract, deploymentBlock}) {
+    const amount = ethers.parseUnits(amountInput.value, 18)
+    const to = ethers.getAddress(recipientAddressInput.value)
+    const secret = accountSelectorEl.value  
+
+    const tx = await privateTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
+    await tx.wait(1)
+    updateBalances({secret, ultraAnonContract, deploymentBlock })
 }
