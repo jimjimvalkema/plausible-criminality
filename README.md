@@ -2,7 +2,7 @@
 A privacy token inspired by eip7503 that has maximum plausible deniability and a maximum anonymity set by joining public and private state.   
 This is achieved by tracking the incoming balance and outgoing balance separately. Where the outgoing state is private and incoming is public. And then simply reusing the private transfer circuit to instead reveal the sender, in order to support public transfers.  
 Enabled by a new [nullfier scheme](https://github.com/jimjimvalkema/scrollZkWormholes/blob/main/docs/notes.md#account-based-nullifiers). 
-Try it out (single core only): https://ultraAnon.eth.limo  
+Try it out (single core only): https://ultaanon.jimjim.dev 
 Run locally to enable multi core proving 
 
 UltraAnon on sepolia: http://sepolia.etherscan.io/address/0xb200d5d4eaA13670553d6f0A66eE79E7F858C637
