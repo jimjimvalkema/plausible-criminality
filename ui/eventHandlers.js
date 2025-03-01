@@ -1,10 +1,14 @@
-import { ethers } from "ethers"
+import { ethers, hexlify } from "ethers"
 
 import { hashAddress, getSafeRandomNumber } from "../scripts/hashor"
 import {syncShadowBalance} from "../scripts/syncMaxing"
 import { privateTransfer, publicTransfer } from "../scripts/transactionBuilder"
 
 export function setEventHandlers({ultraAnonContract, deploymentBlock}) {
+    const pubTxsUl = document.getElementById("allPublicTransfersUl")
+    const privTxsUl = document.getElementById("allPrivateTransfersUl")
+
+
     const contractAddress = ultraAnonContract.target
 
     const importPrivateKeyInput = document.getElementById("importPrivateKeyInput")
@@ -25,10 +29,10 @@ export function setEventHandlers({ultraAnonContract, deploymentBlock}) {
     copyPrivatekeyBtn.addEventListener("click", async ()=> copySecretBtnHandler({accountSelectorEl}))
 
     generateAddressBtn.addEventListener("click", async ()=>generateAddressHandler({ultraAnonContract, accountSelectorEl}))
-    accountSelectorEl.addEventListener("change",async (event)=>accountSelectorHandler({event, accountSelectorEl, ultraAnonContract, deploymentBlock}))
+    accountSelectorEl.addEventListener("change",async (event)=>accountSelectorHandler({pubTxsUl, privTxsUl,event, accountSelectorEl, ultraAnonContract, deploymentBlock}))
     
-    publicTransferBtn.addEventListener("click", async ()=>transferPubliclyHandler({accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
-    privateTransferBtn.addEventListener("click", async ()=>transferPrivatelyHandler({accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
+    publicTransferBtn.addEventListener("click", async ()=>transferPubliclyHandler({allPublicTransfersUl: pubTxsUl,accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
+    privateTransferBtn.addEventListener("click", async ()=>transferPrivatelyHandler({allPrivateTransfersUl: privTxsUl, accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
     
     importPrivateKeyBtn.addEventListener("click", async ()=>addNewAccount({secret:importPrivateKeyInput.value,contractAddress, accountSelectorEl}))
 
@@ -58,7 +62,7 @@ function addSecretLocalStorage({secret, address, contractAddress}) {
     if (!allSecret) {
         allSecret = {}
     }
-    allSecret[address] = ethers.toBeHex(secret)
+    allSecret[address] = {secret: ethers.toBeHex(secret)}
     localStorage.setItem(contractAddress, JSON.stringify(allSecret))
 }
 
@@ -72,7 +76,7 @@ function updateAccountSelector({contractAddress, accountSelectorEl, selectSecret
     const allSecrets = JSON.parse(localStorage.getItem(contractAddress));
     if (!selectSecret) {
         const allAddresses = allSecrets ? Object.keys(allSecrets) : false
-        const firstSecret = allAddresses ? allSecrets[allAddresses[0]] : ""
+        const firstSecret = allAddresses ? allSecrets[allAddresses[0]].secret : ""
         selectSecret = firstSecret 
     }
 
@@ -80,7 +84,7 @@ function updateAccountSelector({contractAddress, accountSelectorEl, selectSecret
     const optionIndexes = [...accountSelectorEl.options].map((v,i)=>i)
     optionIndexes.slice(1).forEach((index)=>accountSelectorEl.options.remove(index));
     for (const address in allSecrets) {
-        const secret = allSecrets[address]
+        const secret = allSecrets[address].secret
         const option = document.createElement("option")
         option.value = secret
         option.innerText = address
@@ -96,11 +100,6 @@ function setClass({className, value}) {
     for (const element of document.getElementsByClassName(className)) {
         element.innerText = value
     } 
-}
-
-async function setPubliclyKnowBalance({address}) {
-    "publiclyKnowBalance"
-    
 }
 
 
@@ -123,10 +122,13 @@ function addNewAccount({secret,contractAddress, accountSelectorEl}) {
  * 
  * @param {{event: event, accountSelectorEl: Element}} param0 
  */
-async function accountSelectorHandler({event, accountSelectorEl, ultraAnonContract, deploymentBlock }) {
+async function accountSelectorHandler({privTxsUl,pubTxsUl,event, accountSelectorEl, ultraAnonContract, deploymentBlock }) {
     const secret = accountSelectorEl.value
+    const address = hashAddress(secret)
     updateBalances({secret, ultraAnonContract, deploymentBlock })
-    updateTxList() //TODO
+    updateTxList({txsUl:pubTxsUl,address,txType:"public",contractAddress:ultraAnonContract.target})
+    updateTxList({txsUl:privTxsUl,address,txType:"private",contractAddress:ultraAnonContract.target})
+    //updateTxList({tx}) //TODO
 }
 
 async function updateBalances({secret, ultraAnonContract, deploymentBlock }) {
@@ -143,37 +145,71 @@ async function updateBalances({secret, ultraAnonContract, deploymentBlock }) {
 
     
 }
+/**
+ * 
+ * @param {{txsUl:element}} param0 
+ */
+function updateTxList({txsUl, address, txType,contractAddress}) {
+    txsUl.innerHTML = ""
+    const allSecrets = JSON.parse(localStorage.getItem(contractAddress))
+    if (allSecrets) {
+        const txsAllTypes = allSecrets[address].txs
+        const txs = txsAllTypes ? txsAllTypes[txType] : false
+        if (txs && txs.length) {
+            for (const tx of txs) {
+                const a = document.createElement("a")
+                a.href = `https://sepolia.etherscan.io/tx/${tx}`
+                a.innerText = `https://sepolia.etherscan.io/tx/${tx}`
+                const li = document.createElement("li")
+                li.appendChild(a)
+                txsUl.appendChild(li)
+            }
+     
+        }
+    }
 
-async function updateTxList() {
 
 
 }
 
-async function transferPubliclyHandler({accountSelectorEl, recipientAddressInput, amountInput,ultraAnonContract, deploymentBlock}) {
+
+async function newTx({txhash, address, contractAddress,txType,txsUl}) {
+    const allSecrets = JSON.parse(localStorage.getItem(contractAddress))
+    if("txs" in allSecrets[address] === false) {
+        allSecrets[address].txs = {"private":[], "public":[]}
+        console.log("neger")
+    }
+    console.log({allSecrets, txType})
+    allSecrets[address].txs[txType].push(txhash)
+    localStorage.setItem(contractAddress, JSON.stringify(allSecrets))
+    //messageUi(`submitted tx: ${await tx.hash}`)
+    messageUi(`confirmed tx: https://sepolia.etherscan.io/tx/0x${txhash}`)
+    //TODO add tx to localstorage
+    //refresh txs
+    console.log({txsUl,address,txType, contractAddress})
+    updateTxList({txsUl,address,txType, contractAddress})
+}
+
+
+
+async function transferPubliclyHandler({allPublicTransfersUl,accountSelectorEl, recipientAddressInput, amountInput,ultraAnonContract, deploymentBlock}) {
     const amount = ethers.parseUnits(amountInput.value, 18)
     const to = ethers.getAddress(recipientAddressInput.value)
     const secret = accountSelectorEl.value  
 
     messageUi("creating proof")
     const tx = await publicTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
-    await newTx(tx.txn_hash)
+    await newTx({txsUl:allPublicTransfersUl, txType:"public",txhash: "0x"+tx.txn_hash, address: hashAddress(secret), contractAddress:ultraAnonContract.target})
     updateBalances({secret, ultraAnonContract, deploymentBlock })
 }
 
-async function newTx(tx) {
-    //messageUi(`submitted tx: ${await tx.hash}`)
-    messageUi(`confirmed tx: https://sepolia.etherscan.io/tx/0x${tx}`)
-    //TODO add tx to localstorage
-    //refresh txs
-}
-
-async function transferPrivatelyHandler({accountSelectorEl, recipientAddressInput, amountInput,ultraAnonContract, deploymentBlock}) {
+async function transferPrivatelyHandler({allPrivateTransfersUl,accountSelectorEl, recipientAddressInput, amountInput,ultraAnonContract, deploymentBlock}) {
     const amount = ethers.parseUnits(amountInput.value, 18)
     const to = ethers.getAddress(recipientAddressInput.value)
     const secret = accountSelectorEl.value  
 
     messageUi("creating proof")
     const tx = await privateTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
-    await newTx(tx.txn_hash)
+    await newTx({txsUl:allPrivateTransfersUl, txType:"private",txhash: "0x"+tx.txn_hash, address: hashAddress(secret), contractAddress:ultraAnonContract.target})
     updateBalances({secret, ultraAnonContract, deploymentBlock })
 }
