@@ -167,6 +167,7 @@ export async function privateTransfer({ amount, to, ultraAnonContract, secret, d
         proof: proof
     }
 
+
     await relayPrivateTransferRequest(contractCallInputs)
 
     // ultraAnonContract.privateTransfer(
@@ -216,6 +217,7 @@ async function relayPrivateTransferRequest(contractCallInputs) {
         console.error('Error sending private transfer:', error);
         throw error;
     }
+
 }
 
 
@@ -244,6 +246,7 @@ export async function publicTransfer({ amount, to, ultraAnonContract, secret, de
         owner: ultraAnonSenderAddress,
         proof: proof
     }
+
     console.log({ contractCallInputs })
 
     await relayPublicTransferRequest(contractCallInputs)
@@ -257,6 +260,7 @@ export async function publicTransfer({ amount, to, ultraAnonContract, secret, de
     //     contractCallInputs.owner,
     //     contractCallInputs.proof
     // )
+
 }
 
 async function relayPublicTransferRequest(contractCallInputs) {

@@ -6,6 +6,15 @@ const FIELD_SIZE = 2188824287183927522224640574525727508854836440041603434369820
 const MERKLETREEDEPTH = 31
 const ZERO = ethers.toBeHex(BigInt(ethers.keccak256(new TextEncoder().encode("tornado"))) % FIELD_SIZE) //tornadocash wow so cool edgy!!!
 
+export function getSafeRandomNumber() {
+    let isBigger = true
+    let number = 0n
+    while (isBigger) {
+        number = ethers.toBigInt(crypto.getRandomValues(new Uint8Array( new Array(32))))
+        isBigger = number > FIELD_SIZE
+    }
+    return number
+}
 
 export function hashAddress(secret) {
     const hash = poseidon1([secret])
