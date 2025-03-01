@@ -270,11 +270,7 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
      *
      * Emits a {Transfer} event.
      */
-    function _update(
-        address from,
-        address to,
-        uint256 value
-    ) internal virtual override {
+    function _update(address from, address to, uint256 value) internal virtual override {
         if (from == address(0)) {
             // Overflow check required: The rest of the code assumes that totalSupply never overflows
             _totalSupply += value;
@@ -303,9 +299,9 @@ contract UltraAnon is ModifiedERC20, ShadowBalanceTree, IncomingBalanceTree {
                 uint256 newBalance = _balances[to] + value;
                 _balances[to] = newBalance;
                 _updateIncomingBalanceTree(to, newBalance);
+                incomingBalance[to] = newBalance;
             }
         }
-        incomingBalance[to] += value;
         emit Transfer(from, to, value);
     }
 }
