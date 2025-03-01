@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<head>
+    <style>
+        .txs {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 98%;
+
+        }
+        body {
+            max-width: fit-content;
+            min-width: 300px;
+            margin-inline: auto;
+            font-size: x-large;
+        }
+        #txsInterface {
+            font-size:large;
+        }
+
+        .UltraAnonTitle {
+            text-align: center;
+        }
+
+
+
+
+
+    </style>
+  <script type="module" crossorigin src="/assets/index-mtOLzO1h.js"></script>
+</head>
+
+<body>
+    <h1 class="UltraAnonTitle">Ultra Anon</h1>
+    <h6 class="UltraAnonTitle"> Maximum Anonymity Set. Maximum Plausible Deniability. </h6>
+    <h3>accounts</h3>
+    <div id="privateKeyManager">
+        <select id="accountSelector" name="accountSelector">
+            <option value="">--select account--</option>
+        </select>
+        <button id="generateNewAddress">generate new address</button>
+        <br>
+        <button id="copyAddressBtn">copy address</button>
+        <button id="copyPrivatekeyBtn">copy privatekey</button>
+        <br>
+
+        <label>
+            import private key:
+            <input type="text" id="importPrivateKeyInput"></input>
+        </label>
+        <button id="importPrivateKeyBtn">import</button>
+
+
+    </div>
+    <br>
+    <br>
+    
+    <h3>balance</h3>
+    <div id="balanceInterface">
+        actual balance: <span class="actualBalance"></span> <span class="ticker"></span>
+        <br>
+        publicly known balance: <span class="publiclyKnowBalance"></span> <span class="ticker"></span>
+        <br>
+        <button id="mintToken">mint 100 tokens</button>
+    </div>
+
+    <br>
+    <br>
+
+    <h3>send</h3>
+    <div id="transferInterface">
+        
+        <label>
+            recipient address:
+            <input type="text" id="recipientAddressInput"></input>
+        </label>
+        <br>
+        <label>
+            amount:
+            <input type="text" id="amountInput"></input>
+        </label>
+        <br>
+        <button id="publicTransferBtn">transfer publicly</button>
+        <button id="privateTransferBtn">transfer privately</button>
+        <br>
+        <span class="message"></span>
+
+    </div>
+
+    <br>
+    <br>
+
+    <h3>transactions made</h3>
+    <div id="txsInterface">
+        
+        <div id="allPublicTransfers">
+            public transfers:
+            <ul id="allPublicTransfersUl">
+                <li>
+                    TODO allPublicTransfersUl
+                </li>
+
+            </ul>
+        </div>
+        <br>
+
+        <div id="allPrivateTransfers">
+            private transfers
+            <ul id="allPrivateTransfersUl">
+                <li>
+                    TODO allPrivateTransfersUl
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</body>

@@ -137,11 +137,15 @@ function addNewAccount({secret,contractAddress, accountSelectorEl}) {
  * @param {{event: event, accountSelectorEl: Element}} param0 
  */
 async function accountSelectorHandler({privTxsUl,pubTxsUl,event, accountSelectorEl, ultraAnonContract, deploymentBlock }) {
+
     const secret = accountSelectorEl.value
-    const address = hashAddress(secret)
-    updateBalances({secret, ultraAnonContract, deploymentBlock })
-    updateTxList({txsUl:pubTxsUl,address,txType:"public",contractAddress:ultraAnonContract.target})
-    updateTxList({txsUl:privTxsUl,address,txType:"private",contractAddress:ultraAnonContract.target})
+    if (secret) {
+        const address = hashAddress(secret)
+        updateBalances({secret, ultraAnonContract, deploymentBlock })
+        updateTxList({txsUl:pubTxsUl,address,txType:"public",contractAddress:ultraAnonContract.target})
+        updateTxList({txsUl:privTxsUl,address,txType:"private",contractAddress:ultraAnonContract.target})
+    }
+
     //updateTxList({tx}) //TODO
 }
 

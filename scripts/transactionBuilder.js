@@ -175,8 +175,23 @@ export async function privateTransfer({ amount, to, ultraAnonContract, secret, d
     }
 
 
-    const tx = await relayPrivateTransferRequest(contractCallInputs)
-    return tx
+    try {
+        const tx = await relayPrivateTransferRequest(contractCallInputs)
+        return tx
+
+    } catch {
+        const tx = await ultraAnonContract.privateTransfer(
+            contractCallInputs.to,
+            contractCallInputs.amount,
+            contractCallInputs.nullifierValue,
+            contractCallInputs.nullifierKey,
+            contractCallInputs.shadowBalanceRoot,
+            contractCallInputs.incomingBalanceRoot, 
+            contractCallInputs.proof
+        )
+        return (await tx.wait(1)).hash
+
+    }
 
     // ultraAnonContract.privateTransfer(
     //     contractCallInputs.to,
@@ -255,9 +270,25 @@ export async function publicTransfer({ amount, to, ultraAnonContract, secret, de
     }
 
     console.log({ contractCallInputs })
+    try {
+        const tx = await relayPublicTransferRequest(contractCallInputs)
+        return tx
 
-    const tx = await relayPublicTransferRequest(contractCallInputs)
-    return tx
+    } catch {
+        const tx = await ultraAnonContract.publicTransfer(
+            contractCallInputs.to,
+            contractCallInputs.amount,
+            contractCallInputs.nullifierValue,
+            contractCallInputs.nullifierKey,
+            contractCallInputs.shadowBalanceRoot,
+            contractCallInputs.incomingBalanceRoot, 
+            contractCallInputs.owner,
+            contractCallInputs.proof
+        )
+        return (await tx.wait(1)).hash
+
+    }
+    
     // ultraAnonContract.publicTransfer(
     //     contractCallInputs.to,
     //     contractCallInputs.value,

@@ -1,13 +1,15 @@
-All my friends know am not a terrorist :) I love my friends!!!
+# UltraAnon
+A privacy token inspired by eip7503 that has maximum plausible deniability and a maximum anonymity set by joining public and private state.   
+This is achieved by tracking the incoming balance and outgoing balance separately. Where the outgoing state is private and incoming is public. And then simply reusing the private transfer circuit to instead reveal the sender, in order to support public transfers.  
+Enabled by a new [nullfier scheme](https://github.com/jimjimvalkema/scrollZkWormholes/blob/main/docs/notes.md#account-based-nullifiers). 
+Try it out (single core only): https://ultraAnon.eth.limo  
+Run locally to enable multi core proving 
+
+UltraAnon on sepolia: http://sepolia.etherscan.io/address/0xb200d5d4eaA13670553d6f0A66eE79E7F858C637
 
 
 
-
-<!-- 
-```shell
-nargo init --name test
-``` -->
-install noir and backend
+# install noir and backend
 ```shell
 bbup -nv 1.0.0-beta.2
 ```
@@ -17,7 +19,7 @@ noirup -v 1.0.0-beta.2
 ```
 
 
-generate verifier contracts
+# generate verifier contracts
 <!-- //this should be a bash script lmao -->
 ```shell
 # private transfer
@@ -44,13 +46,13 @@ node scripts/replaceLine.js --file contracts/PrivateTransferVerifier.sol --remov
 node scripts/replaceLine.js --file contracts/PublicTransferVerifier.sol --remove "contract UltraVerifier is BaseUltraVerifier {" --replace "contract PublicTransferVerifier is BaseUltraVerifier {"
 ```
 
-deploy
+# deploy
 ```shell
 rm -fr ignition/deployments;
 yarn hardhat run scripts/deploy.js --network sepolia;
 ```
 
-verify etherscan
+# verify etherscan
 ```shell
 yarn hardhat ignition verify chain-11155111 --include-unrelated-contracts
 ```
@@ -59,6 +61,14 @@ yarn hardhat ignition verify chain-11155111 --include-unrelated-contracts
 ```shell
 yarn hardhat run test/contractinteractionTest.js 
 ``` -->
+# Relay
 
+This is a small webserver that executes smart contract calls for others. This is important to preserve the privacy of UltraAnon users. Send arguments for either `UltraAnon.publicTransfer` or `UltraAnon.privateTransfer` to the endpoints `/public_transfer` or `/private_transfer`.
 
-UltraAnon on sepolia: http://sepolia.etherscan.io/address/0xb200d5d4eaA13670553d6f0A66eE79E7F858C637
+# Running
+
+By default it will run locally at port 8000. Requires env vars `PROVIDER_URL`, `CONTRACT_ADDRESS` (ultraAnon contract address) and `PRIVATE_KEY`.
+
+Run with `cargo run` (dev) or `cargo run --release` (prod).
+
+If you run into issues after getting it to work once or twice it's likely your rpc.
