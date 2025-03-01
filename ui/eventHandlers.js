@@ -7,6 +7,9 @@ import { privateTransfer, publicTransfer } from "../scripts/transactionBuilder"
 export function setEventHandlers({ultraAnonContract, deploymentBlock}) {
     const contractAddress = ultraAnonContract.target
 
+    const importPrivateKeyInput = document.getElementById("importPrivateKeyInput")
+    const importPrivateKeyBtn = document.getElementById("importPrivateKeyBtn")
+
     const copyAddressBtn = document.getElementById("copyAddressBtn")
     const copyPrivatekeyBtn = document.getElementById("copyPrivatekeyBtn")
 
@@ -26,9 +29,16 @@ export function setEventHandlers({ultraAnonContract, deploymentBlock}) {
     
     publicTransferBtn.addEventListener("click", async ()=>transferPubliclyHandler({accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
     privateTransferBtn.addEventListener("click", async ()=>transferPrivatelyHandler({accountSelectorEl, recipientAddressInput, amountInput, ultraAnonContract, deploymentBlock}))
+    
+    importPrivateKeyBtn.addEventListener("click", async ()=>addNewAccount({secret:importPrivateKeyInput.value,contractAddress, accountSelectorEl}))
 
     updateAccountSelector({accountSelectorEl, contractAddress: contractAddress})
 
+}
+
+function messageUi(message) {
+    console.log("message: ", message)
+    setClass({className:"message", value:message})
 }
 
 function copyAddressBtnHandler({accountSelectorEl}) {
@@ -97,10 +107,17 @@ async function setPubliclyKnowBalance({address}) {
 function generateAddressHandler({ultraAnonContract, accountSelectorEl}) {
     const contractAddress = ultraAnonContract.target
     const secret = getSafeRandomNumber()
+    addNewAccount({secret,contractAddress, accountSelectorEl})
+    // addSecretLocalStorage({secret,address,contractAddress:contractAddress})
+    // updateAccountSelector({accountSelectorEl,contractAddress: contractAddress, selectSecret: ethers.toBeHex(secret)})
+}
+
+function addNewAccount({secret,contractAddress, accountSelectorEl}) {
     const address  = hashAddress(secret)
     addSecretLocalStorage({secret,address,contractAddress:contractAddress})
     updateAccountSelector({accountSelectorEl,contractAddress: contractAddress, selectSecret: ethers.toBeHex(secret)})
 }
+
 
 /**
  * 
@@ -134,9 +151,17 @@ async function transferPubliclyHandler({accountSelectorEl, recipientAddressInput
     const to = ethers.getAddress(recipientAddressInput.value)
     const secret = accountSelectorEl.value  
 
+    messageUi("creating proof")
     const tx = await publicTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
-    await tx.wait(1)
+    await newTx(tx)
     updateBalances({secret, ultraAnonContract, deploymentBlock })
+}
+
+async function newTx(tx) {
+    messageUi(`submitted tx: ${await tx.hash}`)
+    messageUi(`confirmed tx: ${(await tx.wait(1)).hash}`)
+    //TODO add tx to localstorage
+    //refresh txs
 }
 
 async function transferPrivatelyHandler({accountSelectorEl, recipientAddressInput, amountInput,ultraAnonContract, deploymentBlock}) {
@@ -144,7 +169,10 @@ async function transferPrivatelyHandler({accountSelectorEl, recipientAddressInpu
     const to = ethers.getAddress(recipientAddressInput.value)
     const secret = accountSelectorEl.value  
 
+    messageUi("creating proof")
     const tx = await privateTransfer({ amount: amount, to:to, ultraAnonContract:ultraAnonContract, secret:secret, deploymentBlock:deploymentBlock })
-    await tx.wait(1)
+    window.tx= tx
+    console.log({tx})
+    await newTx(tx)
     updateBalances({secret, ultraAnonContract, deploymentBlock })
 }
